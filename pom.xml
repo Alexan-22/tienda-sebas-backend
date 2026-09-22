@@ -19,18 +19,12 @@
     <name>TiendaSebas</name>
     <description>Tienda online Tienda Sebas</description>
 
-    <!-- ========================================== -->
-    <!-- JAVA -->
-    <!-- ========================================== -->
-
     <properties>
         <java.version>21</java.version>
         <maven.compiler.release>21</maven.compiler.release>
     </properties>
 
-    <!-- ========================================== -->
-    <!-- DEPENDENCIAS -->
-    <!-- ========================================== -->
+   
 
     <dependencies>
 
@@ -114,9 +108,9 @@
 
     </dependencies>
 
-    <!-- ========================================== -->
+    
     <!-- BUILD -->
-    <!-- ========================================== -->
+    
 
     <build>
         <plugins>
