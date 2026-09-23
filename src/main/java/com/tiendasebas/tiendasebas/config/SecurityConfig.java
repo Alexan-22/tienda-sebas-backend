@@ -62,8 +62,8 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/productos/admin/**",
                                 "/api/producto-tallas/admin/**",
-                                "/api/producto-imagenes/admin/**",
                                 "/api/ventas/admin/**",
+                                "/api/usuarios/admin/**",
                                 "/api/imagenes/**"
                         ).hasRole("ADMIN")
 
