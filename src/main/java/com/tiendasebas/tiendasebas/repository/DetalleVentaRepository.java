@@ -10,5 +10,11 @@ import java.util.List;
 public interface DetalleVentaRepository
         extends JpaRepository<DetalleVenta, Integer> {
 
-    List<DetalleVenta> findByVenta(Venta venta);
+    List<DetalleVenta> findByVenta(
+            Venta venta
+    );
+
+    List<DetalleVenta> findByVentaOrderByIdDetalleVentaAsc(
+            Venta venta
+    );
 }
