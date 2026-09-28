@@ -3,6 +3,7 @@ package com.tiendasebas.tiendasebas.controller;
 import com.tiendasebas.tiendasebas.dto.CompraRequest;
 import com.tiendasebas.tiendasebas.dto.CompraResponse;
 import com.tiendasebas.tiendasebas.dto.DetalleCompraResponse;
+import com.tiendasebas.tiendasebas.dto.DetalleVentaResponse;
 import com.tiendasebas.tiendasebas.dto.VentaResponse;
 import com.tiendasebas.tiendasebas.service.VentaService;
 
@@ -18,7 +19,9 @@ public class VentaController {
 
     private final VentaService ventaService;
 
-    public VentaController(VentaService ventaService) {
+    public VentaController(
+            VentaService ventaService
+    ) {
         this.ventaService = ventaService;
     }
 
@@ -32,7 +35,8 @@ public class VentaController {
             Authentication authentication
     ) {
 
-        String correo = authentication.getName();
+        String correo =
+                authentication.getName();
 
         return ResponseEntity.ok(
                 ventaService.realizarCompra(
@@ -51,7 +55,8 @@ public class VentaController {
             Authentication authentication
     ) {
 
-        String correo = authentication.getName();
+        String correo =
+                authentication.getName();
 
         return ResponseEntity.ok(
                 ventaService.listarMisCompras(
@@ -61,7 +66,7 @@ public class VentaController {
     }
 
     // =========================================================
-    // CLIENTE - DETALLE DE SU PROPIA COMPRA / BOLETA
+    // CLIENTE - DETALLE DE SU PROPIA COMPRA
     // =========================================================
 
     @GetMapping("/{idVenta}/detalle")
@@ -70,7 +75,8 @@ public class VentaController {
             Authentication authentication
     ) {
 
-        String correo = authentication.getName();
+        String correo =
+                authentication.getName();
 
         return ResponseEntity.ok(
                 ventaService.obtenerDetalleMiCompra(
@@ -89,6 +95,19 @@ public class VentaController {
 
         return ResponseEntity.ok(
                 ventaService.listarTodas()
+        );
+    }
+
+    // =========================================================
+    // ADMIN - DETALLES PARA REPORTES
+    // =========================================================
+
+    @GetMapping("/admin/reportes/detalles")
+    public ResponseEntity<List<DetalleVentaResponse>>
+    listarDetallesParaReportes() {
+
+        return ResponseEntity.ok(
+                ventaService.listarDetallesParaReportes()
         );
     }
 

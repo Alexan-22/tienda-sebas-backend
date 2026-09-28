@@ -3,6 +3,7 @@ package com.tiendasebas.tiendasebas.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -23,8 +24,8 @@ public class Venta {
     @Column(nullable = false)
     private LocalDateTime fechaVenta = LocalDateTime.now();
 
-    @Column(nullable = false)
-    private Double total;
+    @Column(nullable = false, precision = 12, scale = 2)
+    private BigDecimal total;
 
     @Column(nullable = false, length = 30)
     private String estado = "REGISTRADA";

@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
@@ -19,7 +20,7 @@ public class VentaResponse {
     private String correoCliente;
 
     private LocalDateTime fechaVenta;
-    private Double total;
+    private BigDecimal total;
     private String estado;
     private String medioPago;
 }

@@ -3,6 +3,8 @@ package com.tiendasebas.tiendasebas.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
+
 @Entity
 @Table(name = "Productos")
 @Data
@@ -21,13 +23,13 @@ public class Producto {
     private String descripcion;
 
     // Precio normal
-    @Column(nullable = false)
-    private Double precio;
+    @Column(nullable = false, precision = 12, scale = 2)
+    private BigDecimal precio;
 
     // Precio promocional
     // null = producto sin oferta
-    @Column
-    private Double precioOferta;
+    @Column(precision = 12, scale = 2)
+    private BigDecimal precioOferta;
 
     @ManyToOne
     @JoinColumn(name = "IdGenero", nullable = false)

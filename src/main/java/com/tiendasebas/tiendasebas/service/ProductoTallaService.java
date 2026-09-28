@@ -3,6 +3,7 @@ package com.tiendasebas.tiendasebas.service;
 import com.tiendasebas.tiendasebas.entity.Producto;
 import com.tiendasebas.tiendasebas.entity.ProductoTalla;
 import com.tiendasebas.tiendasebas.entity.Talla;
+
 import com.tiendasebas.tiendasebas.repository.ProductoRepository;
 import com.tiendasebas.tiendasebas.repository.ProductoTallaRepository;
 import com.tiendasebas.tiendasebas.repository.TallaRepository;
@@ -15,28 +16,65 @@ import java.util.List;
 public class ProductoTallaService {
 
     private final ProductoTallaRepository productoTallaRepository;
+
     private final ProductoRepository productoRepository;
+
     private final TallaRepository tallaRepository;
+
 
     public ProductoTallaService(
             ProductoTallaRepository productoTallaRepository,
             ProductoRepository productoRepository,
-            TallaRepository tallaRepository) {
+            TallaRepository tallaRepository
+    ) {
 
-        this.productoTallaRepository = productoTallaRepository;
-        this.productoRepository = productoRepository;
-        this.tallaRepository = tallaRepository;
+        this.productoTallaRepository =
+                productoTallaRepository;
+
+        this.productoRepository =
+                productoRepository;
+
+        this.tallaRepository =
+                tallaRepository;
     }
 
-    public List<ProductoTalla> listarPorProducto(Integer idProducto) {
+
+    // =========================================================
+    // LISTAR TALLAS Y STOCK DE UN PRODUCTO
+    // =========================================================
+
+    public List<ProductoTalla> listarPorProducto(
+            Integer idProducto
+    ) {
 
         return productoTallaRepository
-                .findByProductoIdProducto(idProducto);
+                .findByProductoIdProducto(
+                        idProducto
+                );
     }
 
-    public ProductoTalla buscar(Integer id) {
 
-        return productoTallaRepository.findById(id)
+    // =========================================================
+    // ADMIN - INVENTARIO COMPLETO PARA REPORTES
+    // =========================================================
+
+    public List<ProductoTalla> listarInventarioCompleto() {
+
+        return productoTallaRepository
+                .listarInventarioCompleto();
+    }
+
+
+    // =========================================================
+    // BUSCAR PRODUCTO + TALLA
+    // =========================================================
+
+    public ProductoTalla buscar(
+            Integer id
+    ) {
+
+        return productoTallaRepository
+                .findById(id)
                 .orElseThrow(() ->
                         new RuntimeException(
                                 "Producto con talla no encontrado"
@@ -44,44 +82,86 @@ public class ProductoTallaService {
                 );
     }
 
+
+    // =========================================================
+    // REGISTRAR TALLA PARA PRODUCTO
+    // =========================================================
+
     public ProductoTalla registrar(
             Integer idProducto,
             Integer idTalla,
-            Integer stock) {
+            Integer stock
+    ) {
 
-        Producto producto = productoRepository.findById(idProducto)
-                .orElseThrow(() ->
-                        new RuntimeException("Producto no encontrado")
-                );
+        Producto producto =
+                productoRepository
+                        .findById(idProducto)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Producto no encontrado"
+                                )
+                        );
 
-        Talla talla = tallaRepository.findById(idTalla)
-                .orElseThrow(() ->
-                        new RuntimeException("Talla no encontrada")
-                );
 
-        ProductoTalla productoTalla = new ProductoTalla();
+        Talla talla =
+                tallaRepository
+                        .findById(idTalla)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Talla no encontrada"
+                                )
+                        );
 
-        productoTalla.setProducto(producto);
-        productoTalla.setTalla(talla);
-        productoTalla.setStock(stock);
 
-        return productoTallaRepository.save(productoTalla);
+        ProductoTalla productoTalla =
+                new ProductoTalla();
+
+
+        productoTalla.setProducto(
+                producto
+        );
+
+        productoTalla.setTalla(
+                talla
+        );
+
+        productoTalla.setStock(
+                stock
+        );
+
+
+        return productoTallaRepository
+                .save(productoTalla);
     }
+
+
+    // =========================================================
+    // ACTUALIZAR STOCK
+    // =========================================================
 
     public ProductoTalla actualizarStock(
             Integer id,
-            Integer stock) {
+            Integer stock
+    ) {
 
-        ProductoTalla productoTalla = buscar(id);
+        ProductoTalla productoTalla =
+                buscar(id);
+
 
         if (stock < 0) {
+
             throw new RuntimeException(
                     "El stock no puede ser negativo"
             );
         }
 
-        productoTalla.setStock(stock);
 
-        return productoTallaRepository.save(productoTalla);
+        productoTalla.setStock(
+                stock
+        );
+
+
+        return productoTallaRepository
+                .save(productoTalla);
     }
 }

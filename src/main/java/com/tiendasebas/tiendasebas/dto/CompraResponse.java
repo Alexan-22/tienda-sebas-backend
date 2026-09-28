@@ -3,13 +3,15 @@ package com.tiendasebas.tiendasebas.dto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
+import java.math.BigDecimal;
+
 @Data
 @AllArgsConstructor
 public class CompraResponse {
 
     private Integer idVenta;
 
-    private Double total;
+    private BigDecimal total;
 
     private String estado;
 

@@ -15,6 +15,7 @@ import com.tiendasebas.tiendasebas.repository.VentaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -62,19 +63,17 @@ public class VentaService {
             );
         }
 
-        if (
-                request.getItems() == null ||
-                        request.getItems().isEmpty()
-        ) {
+        if (request.getItems() == null ||
+                request.getItems().isEmpty()) {
+
             throw new CompraException(
                     "El carrito está vacío"
             );
         }
 
-        if (
-                request.getMedioPago() == null ||
-                        request.getMedioPago().isBlank()
-        ) {
+        if (request.getMedioPago() == null ||
+                request.getMedioPago().isBlank()) {
+
             throw new CompraException(
                     "Debe seleccionar un medio de pago"
             );
@@ -85,10 +84,9 @@ public class VentaService {
                 .trim()
                 .toUpperCase();
 
-        if (
-                !medioPago.equals("YAPE") &&
-                        !medioPago.equals("TARJETA")
-        ) {
+        if (!medioPago.equals("YAPE") &&
+                !medioPago.equals("TARJETA")) {
+
             throw new CompraException(
                     "Medio de pago no válido"
             );
@@ -100,18 +98,17 @@ public class VentaService {
         venta.setFechaVenta(LocalDateTime.now());
         venta.setEstado("REGISTRADA");
         venta.setMedioPago(medioPago);
-        venta.setTotal(0.0);
+        venta.setTotal(BigDecimal.ZERO);
 
         venta = ventaRepository.save(venta);
 
-        double total = 0.0;
+        BigDecimal total = BigDecimal.ZERO;
 
         for (CompraItemDto item : request.getItems()) {
 
-            if (
-                    item.getCantidad() == null ||
-                            item.getCantidad() <= 0
-            ) {
+            if (item.getCantidad() == null ||
+                    item.getCantidad() <= 0) {
+
                 throw new CompraException(
                         "La cantidad debe ser mayor que cero"
                 );
@@ -148,10 +145,9 @@ public class VentaService {
             Integer stockActual =
                     productoTalla.getStock();
 
-            if (
-                    stockActual == null ||
-                            stockActual <= 0
-            ) {
+            if (stockActual == null ||
+                    stockActual <= 0) {
+
                 throw new CompraException(
                         "Sin stock disponible para: "
                                 + producto.getNombre()
@@ -175,11 +171,15 @@ public class VentaService {
                 );
             }
 
-            double precio =
+            BigDecimal precio =
                     obtenerPrecioVenta(producto);
 
-            double subtotal =
-                    precio * item.getCantidad();
+            BigDecimal subtotal =
+                    precio.multiply(
+                            BigDecimal.valueOf(
+                                    item.getCantidad()
+                            )
+                    );
 
             DetalleVenta detalle =
                     new DetalleVenta();
@@ -200,7 +200,7 @@ public class VentaService {
                     productoTalla
             );
 
-            total += subtotal;
+            total = total.add(subtotal);
         }
 
         venta.setTotal(total);
@@ -247,6 +247,20 @@ public class VentaService {
                 .findAll()
                 .stream()
                 .map(this::convertirVentaResponse)
+                .toList();
+    }
+
+    // =========================================================
+    // ADMIN - DETALLES PARA REPORTES
+    // =========================================================
+
+    @Transactional(readOnly = true)
+    public List<DetalleVentaResponse> listarDetallesParaReportes() {
+
+        return detalleVentaRepository
+                .listarTodosParaReportes()
+                .stream()
+                .map(this::convertirDetalleVentaResponse)
                 .toList();
     }
 
@@ -389,10 +403,9 @@ public class VentaService {
             Integer idVenta
     ) {
 
-        if (
-                idVenta == null ||
-                        idVenta <= 0
-        ) {
+        if (idVenta == null ||
+                idVenta <= 0) {
+
             throw new CompraException(
                     "Venta no válida"
             );
@@ -407,10 +420,9 @@ public class VentaService {
             String correoUsuario
     ) {
 
-        if (
-                correoUsuario == null ||
-                        correoUsuario.isBlank()
-        ) {
+        if (correoUsuario == null ||
+                correoUsuario.isBlank()) {
+
             throw new CompraException(
                     "Usuario no autenticado"
             );
@@ -421,20 +433,21 @@ public class VentaService {
     // PRECIO EFECTIVO
     // =========================================================
 
-    private double obtenerPrecioVenta(
+    private BigDecimal obtenerPrecioVenta(
             Producto producto
     ) {
 
-        Double precioNormal =
+        BigDecimal precioNormal =
                 producto.getPrecio();
 
-        Double precioOferta =
+        BigDecimal precioOferta =
                 producto.getPrecioOferta();
 
-        if (
-                precioNormal == null ||
-                        precioNormal <= 0
-        ) {
+        if (precioNormal == null ||
+                precioNormal.compareTo(
+                        BigDecimal.ZERO
+                ) <= 0) {
+
             throw new CompraException(
                     "El producto "
                             + producto.getNombre()
@@ -442,11 +455,14 @@ public class VentaService {
             );
         }
 
-        if (
-                precioOferta != null &&
-                        precioOferta > 0 &&
-                        precioOferta < precioNormal
-        ) {
+        if (precioOferta != null &&
+                precioOferta.compareTo(
+                        BigDecimal.ZERO
+                ) > 0 &&
+                precioOferta.compareTo(
+                        precioNormal
+                ) < 0) {
+
             return precioOferta;
         }
 

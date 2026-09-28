@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -18,7 +20,7 @@ public class DetalleVentaResponse {
 
     private Integer cantidad;
 
-    private Double precioUnitario;
+    private BigDecimal precioUnitario;
 
-    private Double subtotal;
+    private BigDecimal subtotal;
 }

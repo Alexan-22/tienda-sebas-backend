@@ -15,9 +15,18 @@ import java.util.Optional;
 public interface ProductoTallaRepository
         extends JpaRepository<ProductoTalla, Integer> {
 
+    // =========================================================
+    // LISTAR STOCK POR PRODUCTO
+    // =========================================================
+
     List<ProductoTalla> findByProductoIdProducto(
             Integer idProducto
     );
+
+
+    // =========================================================
+    // BUSCAR PRODUCTO + TALLA
+    // =========================================================
 
     Optional<ProductoTalla>
     findByProductoIdProductoAndTallaIdTalla(
@@ -25,6 +34,24 @@ public interface ProductoTallaRepository
             Integer idTalla
     );
 
+
+    // =========================================================
+    // ADMIN - INVENTARIO COMPLETO PARA REPORTES
+    // =========================================================
+
+    @Query("""
+            SELECT pt
+            FROM ProductoTalla pt
+            JOIN FETCH pt.producto p
+            JOIN FETCH pt.talla t
+            ORDER BY p.idProducto, t.idTalla
+            """)
+    List<ProductoTalla> listarInventarioCompleto();
+
+
+    // =========================================================
+    // COMPRA - BLOQUEAR STOCK DURANTE TRANSACCIÓN
+    // =========================================================
 
     /*
      * Se utiliza durante una compra.
@@ -36,6 +63,7 @@ public interface ProductoTallaRepository
      * Esto evita que dos compras simultáneas
      * lean el mismo stock y lo vendan dos veces.
      */
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
             SELECT pt

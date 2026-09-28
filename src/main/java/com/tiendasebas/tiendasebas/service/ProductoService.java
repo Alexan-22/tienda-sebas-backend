@@ -9,6 +9,7 @@ import com.tiendasebas.tiendasebas.repository.ProductoRepository;
 
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -28,17 +29,9 @@ public class ProductoService {
         this.generoRepository = generoRepository;
     }
 
-    // ============================================================
-    // PRODUCTOS ACTIVOS
-    // ============================================================
-
     public List<Producto> listar() {
         return productoRepository.findByEstadoTrue();
     }
-
-    // ============================================================
-    // BUSCAR POR ID
-    // ============================================================
 
     public Producto buscar(Integer id) {
 
@@ -53,27 +46,15 @@ public class ProductoService {
         return producto;
     }
 
-    // ============================================================
-    // FILTRAR POR GÉNERO
-    // ============================================================
-
     public List<Producto> listarPorGenero(Integer idGenero) {
         return productoRepository
                 .findByEstadoTrueAndGeneroIdGenero(idGenero);
     }
 
-    // ============================================================
-    // FILTRAR POR CATEGORÍA
-    // ============================================================
-
     public List<Producto> listarPorCategoria(Integer idCategoria) {
         return productoRepository
                 .findByEstadoTrueAndCategoriaIdCategoria(idCategoria);
     }
-
-    // ============================================================
-    // FILTRAR POR GÉNERO + CATEGORÍA
-    // ============================================================
 
     public List<Producto> filtrar(
             Integer idGenero,
@@ -85,10 +66,6 @@ public class ProductoService {
                         idCategoria
                 );
     }
-
-    // ============================================================
-    // BUSCADOR
-    // ============================================================
 
     public List<Producto> buscarPorNombre(String texto) {
 
@@ -102,36 +79,20 @@ public class ProductoService {
                 );
     }
 
-    // ============================================================
-    // DESTACADOS
-    // ============================================================
-
     public List<Producto> listarDestacados() {
         return productoRepository
                 .findByEstadoTrueAndDestacadoTrue();
     }
-
-    // ============================================================
-    // NUEVOS
-    // ============================================================
 
     public List<Producto> listarNuevos() {
         return productoRepository
                 .findByEstadoTrueAndNuevoTrue();
     }
 
-    // ============================================================
-    // OFERTAS
-    // ============================================================
-
     public List<Producto> listarOfertas() {
         return productoRepository
                 .findByEstadoTrueAndPrecioOfertaIsNotNull();
     }
-
-    // ============================================================
-    // REGISTRAR PRODUCTO
-    // ============================================================
 
     public Producto guardar(
             Producto producto,
@@ -150,7 +111,6 @@ public class ProductoService {
 
         producto.setGenero(genero);
         producto.setCategoria(categoria);
-
         producto.setEstado(true);
 
         if (producto.getNuevo() == null) {
@@ -163,10 +123,6 @@ public class ProductoService {
 
         return productoRepository.save(producto);
     }
-
-    // ============================================================
-    // ACTUALIZAR PRODUCTO
-    // ============================================================
 
     public Producto actualizar(
             Integer id,
@@ -208,10 +164,6 @@ public class ProductoService {
         return productoRepository.save(producto);
     }
 
-    // ============================================================
-    // ELIMINACIÓN LÓGICA
-    // ============================================================
-
     public void eliminar(Integer id) {
 
         Producto producto = productoRepository.findById(id)
@@ -222,10 +174,6 @@ public class ProductoService {
 
         productoRepository.save(producto);
     }
-
-    // ============================================================
-    // VALIDACIONES
-    // ============================================================
 
     private void validarProducto(Producto producto) {
 
@@ -238,7 +186,7 @@ public class ProductoService {
         }
 
         if (producto.getPrecio() == null ||
-                producto.getPrecio() <= 0) {
+                producto.getPrecio().compareTo(BigDecimal.ZERO) <= 0) {
 
             throw new RuntimeException(
                     "El precio debe ser mayor que cero"
@@ -247,13 +195,17 @@ public class ProductoService {
 
         if (producto.getPrecioOferta() != null) {
 
-            if (producto.getPrecioOferta() <= 0) {
+            if (producto.getPrecioOferta()
+                    .compareTo(BigDecimal.ZERO) <= 0) {
+
                 throw new RuntimeException(
                         "El precio de oferta debe ser mayor que cero"
                 );
             }
 
-            if (producto.getPrecioOferta() >= producto.getPrecio()) {
+            if (producto.getPrecioOferta()
+                    .compareTo(producto.getPrecio()) >= 0) {
+
                 throw new RuntimeException(
                         "El precio de oferta debe ser menor al precio normal"
                 );
