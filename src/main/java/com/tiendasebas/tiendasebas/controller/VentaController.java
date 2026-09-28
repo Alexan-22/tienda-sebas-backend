@@ -3,11 +3,7 @@ package com.tiendasebas.tiendasebas.controller;
 import com.tiendasebas.tiendasebas.dto.CompraRequest;
 import com.tiendasebas.tiendasebas.dto.CompraResponse;
 import com.tiendasebas.tiendasebas.dto.DetalleCompraResponse;
-
-import com.tiendasebas.tiendasebas.entity.Venta;
-
-import com.tiendasebas.tiendasebas.repository.VentaRepository;
-
+import com.tiendasebas.tiendasebas.dto.VentaResponse;
 import com.tiendasebas.tiendasebas.service.VentaService;
 
 import org.springframework.http.ResponseEntity;
@@ -21,16 +17,10 @@ import java.util.List;
 public class VentaController {
 
     private final VentaService ventaService;
-    private final VentaRepository ventaRepository;
 
-    public VentaController(
-            VentaService ventaService,
-            VentaRepository ventaRepository
-    ) {
+    public VentaController(VentaService ventaService) {
         this.ventaService = ventaService;
-        this.ventaRepository = ventaRepository;
     }
-
 
     // =========================================================
     // REALIZAR COMPRA
@@ -42,8 +32,7 @@ public class VentaController {
             Authentication authentication
     ) {
 
-        String correo =
-                authentication.getName();
+        String correo = authentication.getName();
 
         return ResponseEntity.ok(
                 ventaService.realizarCompra(
@@ -53,18 +42,16 @@ public class VentaController {
         );
     }
 
-
     // =========================================================
     // CLIENTE - LISTAR MIS COMPRAS
     // =========================================================
 
     @GetMapping("/mis-compras")
-    public ResponseEntity<List<Venta>> misCompras(
+    public ResponseEntity<List<VentaResponse>> misCompras(
             Authentication authentication
     ) {
 
-        String correo =
-                authentication.getName();
+        String correo = authentication.getName();
 
         return ResponseEntity.ok(
                 ventaService.listarMisCompras(
@@ -72,7 +59,6 @@ public class VentaController {
                 )
         );
     }
-
 
     // =========================================================
     // CLIENTE - DETALLE DE SU PROPIA COMPRA / BOLETA
@@ -84,8 +70,7 @@ public class VentaController {
             Authentication authentication
     ) {
 
-        String correo =
-                authentication.getName();
+        String correo = authentication.getName();
 
         return ResponseEntity.ok(
                 ventaService.obtenerDetalleMiCompra(
@@ -95,19 +80,17 @@ public class VentaController {
         );
     }
 
-
     // =========================================================
     // ADMIN - LISTAR TODAS LAS VENTAS
     // =========================================================
 
     @GetMapping("/admin")
-    public ResponseEntity<List<Venta>> listarTodas() {
+    public ResponseEntity<List<VentaResponse>> listarTodas() {
 
         return ResponseEntity.ok(
-                ventaRepository.findAll()
+                ventaService.listarTodas()
         );
     }
-
 
     // =========================================================
     // ADMIN - DETALLE DE CUALQUIER VENTA

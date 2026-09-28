@@ -1,12 +1,12 @@
 package com.tiendasebas.tiendasebas.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
 @Table(name = "Usuarios")
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class Usuario {
@@ -24,6 +24,7 @@ public class Usuario {
     @Column(nullable = false, unique = true, length = 150)
     private String correo;
 
+    @JsonIgnore
     @Column(nullable = false, length = 255)
     private String passwordHash;
 

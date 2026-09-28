@@ -1,18 +1,12 @@
 package com.tiendasebas.tiendasebas.service;
 
-import com.tiendasebas.tiendasebas.dto.CompraItemDto;
-import com.tiendasebas.tiendasebas.dto.CompraRequest;
-import com.tiendasebas.tiendasebas.dto.CompraResponse;
-import com.tiendasebas.tiendasebas.dto.DetalleCompraResponse;
-
+import com.tiendasebas.tiendasebas.dto.*;
 import com.tiendasebas.tiendasebas.entity.DetalleVenta;
 import com.tiendasebas.tiendasebas.entity.Producto;
 import com.tiendasebas.tiendasebas.entity.ProductoTalla;
 import com.tiendasebas.tiendasebas.entity.Usuario;
 import com.tiendasebas.tiendasebas.entity.Venta;
-
 import com.tiendasebas.tiendasebas.exception.CompraException;
-
 import com.tiendasebas.tiendasebas.repository.DetalleVentaRepository;
 import com.tiendasebas.tiendasebas.repository.ProductoTallaRepository;
 import com.tiendasebas.tiendasebas.repository.UsuarioRepository;
@@ -44,7 +38,6 @@ public class VentaService {
         this.usuarioRepository = usuarioRepository;
     }
 
-
     // =========================================================
     // REALIZAR COMPRA
     // =========================================================
@@ -69,11 +62,6 @@ public class VentaService {
             );
         }
 
-
-        // =====================================================
-        // VALIDAR CARRITO
-        // =====================================================
-
         if (
                 request.getItems() == null ||
                         request.getItems().isEmpty()
@@ -82,11 +70,6 @@ public class VentaService {
                     "El carrito está vacío"
             );
         }
-
-
-        // =====================================================
-        // VALIDAR MEDIO DE PAGO
-        // =====================================================
 
         if (
                 request.getMedioPago() == null ||
@@ -111,11 +94,6 @@ public class VentaService {
             );
         }
 
-
-        // =====================================================
-        // CREAR VENTA
-        // =====================================================
-
         Venta venta = new Venta();
 
         venta.setUsuario(usuario);
@@ -127,11 +105,6 @@ public class VentaService {
         venta = ventaRepository.save(venta);
 
         double total = 0.0;
-
-
-        // =====================================================
-        // PROCESAR PRODUCTOS
-        // =====================================================
 
         for (CompraItemDto item : request.getItems()) {
 
@@ -150,11 +123,6 @@ public class VentaService {
                 );
             }
 
-
-            // =================================================
-            // OBTENER PRODUCTO/TALLA CON BLOQUEO
-            // =================================================
-
             ProductoTalla productoTalla =
                     productoTallaRepository
                             .buscarPorIdParaCompra(
@@ -169,11 +137,6 @@ public class VentaService {
             Producto producto =
                     productoTalla.getProducto();
 
-
-            // =================================================
-            // VALIDAR PRODUCTO ACTIVO
-            // =================================================
-
             if (!Boolean.TRUE.equals(producto.getEstado())) {
                 throw new CompraException(
                         "El producto "
@@ -181,11 +144,6 @@ public class VentaService {
                                 + " no está disponible"
                 );
             }
-
-
-            // =================================================
-            // VALIDAR STOCK REAL
-            // =================================================
 
             Integer stockActual =
                     productoTalla.getStock();
@@ -217,21 +175,11 @@ public class VentaService {
                 );
             }
 
-
-            // =================================================
-            // CALCULAR PRECIO REAL
-            // =================================================
-
             double precio =
                     obtenerPrecioVenta(producto);
 
             double subtotal =
                     precio * item.getCantidad();
-
-
-            // =================================================
-            // CREAR DETALLE
-            // =================================================
 
             DetalleVenta detalle =
                     new DetalleVenta();
@@ -244,11 +192,6 @@ public class VentaService {
 
             detalleVentaRepository.save(detalle);
 
-
-            // =================================================
-            // DESCONTAR STOCK
-            // =================================================
-
             productoTalla.setStock(
                     stockActual - item.getCantidad()
             );
@@ -257,19 +200,12 @@ public class VentaService {
                     productoTalla
             );
 
-
             total += subtotal;
         }
-
-
-        // =====================================================
-        // ACTUALIZAR TOTAL
-        // =====================================================
 
         venta.setTotal(total);
 
         ventaRepository.save(venta);
-
 
         return new CompraResponse(
                 venta.getIdVenta(),
@@ -280,13 +216,12 @@ public class VentaService {
         );
     }
 
-
     // =========================================================
     // CLIENTE - LISTAR SUS COMPRAS
     // =========================================================
 
     @Transactional(readOnly = true)
-    public List<Venta> listarMisCompras(
+    public List<VentaResponse> listarMisCompras(
             String correoUsuario
     ) {
 
@@ -295,9 +230,25 @@ public class VentaService {
         return ventaRepository
                 .findByUsuarioCorreoOrderByFechaVentaDesc(
                         correoUsuario
-                );
+                )
+                .stream()
+                .map(this::convertirVentaResponse)
+                .toList();
     }
 
+    // =========================================================
+    // ADMIN - LISTAR TODAS LAS VENTAS
+    // =========================================================
+
+    @Transactional(readOnly = true)
+    public List<VentaResponse> listarTodas() {
+
+        return ventaRepository
+                .findAll()
+                .stream()
+                .map(this::convertirVentaResponse)
+                .toList();
+    }
 
     // =========================================================
     // CLIENTE - DETALLE DE SU PROPIA COMPRA
@@ -310,7 +261,6 @@ public class VentaService {
     ) {
 
         validarIdVenta(idVenta);
-
         validarCorreoUsuario(correoUsuario);
 
         Venta venta =
@@ -327,7 +277,6 @@ public class VentaService {
 
         return construirDetalleCompra(venta);
     }
-
 
     // =========================================================
     // ADMIN - DETALLE DE CUALQUIER VENTA
@@ -352,20 +301,48 @@ public class VentaService {
         return construirDetalleCompra(venta);
     }
 
+    // =========================================================
+    // CONVERTIR VENTA A DTO
+    // =========================================================
+
+    private VentaResponse convertirVentaResponse(
+            Venta venta
+    ) {
+
+        Usuario usuario =
+                venta.getUsuario();
+
+        return new VentaResponse(
+                venta.getIdVenta(),
+
+                usuario.getIdUsuario(),
+                usuario.getNombre(),
+                usuario.getApellido(),
+                usuario.getCorreo(),
+
+                venta.getFechaVenta(),
+                venta.getTotal(),
+                venta.getEstado(),
+                venta.getMedioPago()
+        );
+    }
 
     // =========================================================
-    // CONSTRUIR RESPUESTA COMPLETA DEL DETALLE
+    // CONSTRUIR RESPUESTA DEL DETALLE
     // =========================================================
 
     private DetalleCompraResponse construirDetalleCompra(
             Venta venta
     ) {
 
-        List<DetalleVenta> detalles =
+        List<DetalleVentaResponse> detalles =
                 detalleVentaRepository
                         .findByVentaOrderByIdDetalleVentaAsc(
                                 venta
-                        );
+                        )
+                        .stream()
+                        .map(this::convertirDetalleVentaResponse)
+                        .toList();
 
         Usuario usuario =
                 venta.getUsuario();
@@ -386,6 +363,23 @@ public class VentaService {
         );
     }
 
+    // =========================================================
+    // CONVERTIR DETALLE A DTO
+    // =========================================================
+
+    private DetalleVentaResponse convertirDetalleVentaResponse(
+            DetalleVenta detalle
+    ) {
+
+        return new DetalleVentaResponse(
+                detalle.getIdDetalleVenta(),
+                detalle.getVenta().getIdVenta(),
+                detalle.getProductoTalla(),
+                detalle.getCantidad(),
+                detalle.getPrecioUnitario(),
+                detalle.getSubtotal()
+        );
+    }
 
     // =========================================================
     // VALIDAR ID DE VENTA
@@ -405,9 +399,8 @@ public class VentaService {
         }
     }
 
-
     // =========================================================
-    // VALIDAR USUARIO AUTENTICADO
+    // VALIDAR USUARIO
     // =========================================================
 
     private void validarCorreoUsuario(
@@ -423,7 +416,6 @@ public class VentaService {
             );
         }
     }
-
 
     // =========================================================
     // PRECIO EFECTIVO

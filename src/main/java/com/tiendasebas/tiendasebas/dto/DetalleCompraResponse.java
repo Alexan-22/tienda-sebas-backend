@@ -1,6 +1,5 @@
 package com.tiendasebas.tiendasebas.dto;
 
-import com.tiendasebas.tiendasebas.entity.DetalleVenta;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -24,5 +23,5 @@ public class DetalleCompraResponse {
     private String apellidoCliente;
     private String correoCliente;
 
-    private List<DetalleVenta> detalles;
+    private List<DetalleVentaResponse> detalles;
 }
