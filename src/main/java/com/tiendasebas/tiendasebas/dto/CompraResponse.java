@@ -11,6 +11,10 @@ public class CompraResponse {
 
     private Integer idVenta;
 
+    private BigDecimal subtotal;
+
+    private BigDecimal costoDelivery;
+
     private BigDecimal total;
 
     private String estado;

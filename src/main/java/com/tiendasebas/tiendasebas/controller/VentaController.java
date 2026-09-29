@@ -1,11 +1,17 @@
 package com.tiendasebas.tiendasebas.controller;
 
+import com.tiendasebas.tiendasebas.dto.ActualizarEstadoPedidoRequest;
 import com.tiendasebas.tiendasebas.dto.CompraRequest;
 import com.tiendasebas.tiendasebas.dto.CompraResponse;
 import com.tiendasebas.tiendasebas.dto.DetalleCompraResponse;
 import com.tiendasebas.tiendasebas.dto.DetalleVentaResponse;
+import com.tiendasebas.tiendasebas.dto.VentaPosRequest;
+import com.tiendasebas.tiendasebas.dto.VentaPosResponse;
 import com.tiendasebas.tiendasebas.dto.VentaResponse;
+
 import com.tiendasebas.tiendasebas.service.VentaService;
+
+import jakarta.validation.Valid;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -19,24 +25,29 @@ public class VentaController {
 
     private final VentaService ventaService;
 
+
     public VentaController(
             VentaService ventaService
     ) {
-        this.ventaService = ventaService;
+
+        this.ventaService =
+                ventaService;
     }
 
+
     // =========================================================
-    // REALIZAR COMPRA
+    // CLIENTE - REALIZAR COMPRA ONLINE
     // =========================================================
 
     @PostMapping
     public ResponseEntity<CompraResponse> comprar(
-            @RequestBody CompraRequest request,
+            @Valid @RequestBody CompraRequest request,
             Authentication authentication
     ) {
 
         String correo =
                 authentication.getName();
+
 
         return ResponseEntity.ok(
                 ventaService.realizarCompra(
@@ -45,6 +56,7 @@ public class VentaController {
                 )
         );
     }
+
 
     // =========================================================
     // CLIENTE - LISTAR MIS COMPRAS
@@ -58,12 +70,14 @@ public class VentaController {
         String correo =
                 authentication.getName();
 
+
         return ResponseEntity.ok(
                 ventaService.listarMisCompras(
                         correo
                 )
         );
     }
+
 
     // =========================================================
     // CLIENTE - DETALLE DE SU PROPIA COMPRA
@@ -78,6 +92,7 @@ public class VentaController {
         String correo =
                 authentication.getName();
 
+
         return ResponseEntity.ok(
                 ventaService.obtenerDetalleMiCompra(
                         idVenta,
@@ -85,6 +100,7 @@ public class VentaController {
                 )
         );
     }
+
 
     // =========================================================
     // ADMIN - LISTAR TODAS LAS VENTAS
@@ -97,6 +113,24 @@ public class VentaController {
                 ventaService.listarTodas()
         );
     }
+
+
+    // =========================================================
+    // ADMIN - REALIZAR VENTA PRESENCIAL / POS
+    // =========================================================
+
+    @PostMapping("/admin/pos")
+    public ResponseEntity<VentaPosResponse> realizarVentaPos(
+            @Valid @RequestBody VentaPosRequest request
+    ) {
+
+        return ResponseEntity.ok(
+                ventaService.realizarVentaPos(
+                        request
+                )
+        );
+    }
+
 
     // =========================================================
     // ADMIN - DETALLES PARA REPORTES
@@ -111,6 +145,7 @@ public class VentaController {
         );
     }
 
+
     // =========================================================
     // ADMIN - DETALLE DE CUALQUIER VENTA
     // =========================================================
@@ -123,6 +158,27 @@ public class VentaController {
         return ResponseEntity.ok(
                 ventaService.obtenerDetalleVentaAdmin(
                         idVenta
+                )
+        );
+    }
+
+
+    // =========================================================
+    // ADMIN - ACTUALIZAR ESTADO LOGÍSTICO
+    // =========================================================
+
+    @PutMapping("/admin/{idVenta}/estado")
+    public ResponseEntity<DetalleCompraResponse>
+    actualizarEstadoPedido(
+            @PathVariable Integer idVenta,
+            @Valid
+            @RequestBody ActualizarEstadoPedidoRequest request
+    ) {
+
+        return ResponseEntity.ok(
+                ventaService.actualizarEstadoPedido(
+                        idVenta,
+                        request.getEstadoPedido()
                 )
         );
     }
