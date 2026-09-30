@@ -103,6 +103,8 @@ public class SecurityConfig {
 
                                 "/api/usuarios/admin/**",
 
+                                "/api/clientes-presenciales/admin/**",
+
                                 "/api/imagenes/**",
 
                                 "/api/home/admin/**"
