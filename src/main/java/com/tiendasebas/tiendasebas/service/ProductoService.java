@@ -6,7 +6,6 @@ import com.tiendasebas.tiendasebas.entity.Producto;
 import com.tiendasebas.tiendasebas.repository.CategoriaRepository;
 import com.tiendasebas.tiendasebas.repository.GeneroRepository;
 import com.tiendasebas.tiendasebas.repository.ProductoRepository;
-
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -23,7 +22,6 @@ public class ProductoService {
             ProductoRepository productoRepository,
             CategoriaRepository categoriaRepository,
             GeneroRepository generoRepository) {
-
         this.productoRepository = productoRepository;
         this.categoriaRepository = categoriaRepository;
         this.generoRepository = generoRepository;
@@ -34,10 +32,8 @@ public class ProductoService {
     }
 
     public Producto buscar(Integer id) {
-
         Producto producto = productoRepository.findById(id)
-                .orElseThrow(() ->
-                        new RuntimeException("Producto no encontrado"));
+                .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
 
         if (!Boolean.TRUE.equals(producto.getEstado())) {
             throw new RuntimeException("Producto no disponible");
@@ -47,117 +43,78 @@ public class ProductoService {
     }
 
     public List<Producto> listarPorGenero(Integer idGenero) {
-        return productoRepository
-                .findByEstadoTrueAndGeneroIdGenero(idGenero);
+        return productoRepository.findByEstadoTrueAndGeneroIdGenero(idGenero);
     }
 
     public List<Producto> listarPorCategoria(Integer idCategoria) {
-        return productoRepository
-                .findByEstadoTrueAndCategoriaIdCategoria(idCategoria);
+        return productoRepository.findByEstadoTrueAndCategoriaIdCategoria(idCategoria);
     }
 
-    public List<Producto> filtrar(
-            Integer idGenero,
-            Integer idCategoria) {
-
-        return productoRepository
-                .findByEstadoTrueAndGeneroIdGeneroAndCategoriaIdCategoria(
-                        idGenero,
-                        idCategoria
-                );
+    public List<Producto> filtrar(Integer idGenero, Integer idCategoria) {
+        return productoRepository.findByEstadoTrueAndGeneroIdGeneroAndCategoriaIdCategoria(idGenero, idCategoria);
     }
 
     public List<Producto> buscarPorNombre(String texto) {
-
         if (texto == null || texto.isBlank()) {
             return listar();
         }
 
-        return productoRepository
-                .findByEstadoTrueAndNombreContainingIgnoreCase(
-                        texto.trim()
-                );
+        return productoRepository.findByEstadoTrueAndNombreContainingIgnoreCase(texto.trim());
     }
 
     public List<Producto> listarDestacados() {
-        return productoRepository
-                .findByEstadoTrueAndDestacadoTrue();
+        return productoRepository.findByEstadoTrueAndDestacadoTrue();
     }
 
     public List<Producto> listarNuevos() {
-        return productoRepository
-                .findByEstadoTrueAndNuevoTrue();
+        return productoRepository.findByEstadoTrueAndNuevoTrue();
     }
 
     public List<Producto> listarOfertas() {
-        return productoRepository
-                .findByEstadoTrueAndPrecioOfertaIsNotNull();
+        return productoRepository.findByEstadoTrueAndPrecioOfertaIsNotNull();
     }
 
-    public Producto guardar(
-            Producto producto,
-            Integer idGenero,
-            Integer idCategoria) {
+    public Producto guardar(Producto producto, Integer idGenero, Integer idCategoria) {
+        validarProducto(producto);
 
         Genero genero = generoRepository.findById(idGenero)
-                .orElseThrow(() ->
-                        new RuntimeException("Género no encontrado"));
+                .orElseThrow(() -> new RuntimeException("Género no encontrado"));
 
         Categoria categoria = categoriaRepository.findById(idCategoria)
-                .orElseThrow(() ->
-                        new RuntimeException("Categoría no encontrada"));
+                .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
 
-        validarProducto(producto);
+        normalizarProducto(producto);
 
         producto.setGenero(genero);
         producto.setCategoria(categoria);
         producto.setEstado(true);
-
-        if (producto.getNuevo() == null) {
-            producto.setNuevo(false);
-        }
-
-        if (producto.getDestacado() == null) {
-            producto.setDestacado(false);
-        }
+        producto.setNuevo(Boolean.TRUE.equals(producto.getNuevo()));
+        producto.setDestacado(Boolean.TRUE.equals(producto.getDestacado()));
 
         return productoRepository.save(producto);
     }
 
-    public Producto actualizar(
-            Integer id,
-            Producto datos,
-            Integer idGenero,
-            Integer idCategoria) {
-
+    public Producto actualizar(Integer id, Producto datos, Integer idGenero, Integer idCategoria) {
         Producto producto = productoRepository.findById(id)
-                .orElseThrow(() ->
-                        new RuntimeException("Producto no encontrado"));
-
-        Genero genero = generoRepository.findById(idGenero)
-                .orElseThrow(() ->
-                        new RuntimeException("Género no encontrado"));
-
-        Categoria categoria = categoriaRepository.findById(idCategoria)
-                .orElseThrow(() ->
-                        new RuntimeException("Categoría no encontrada"));
+                .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
 
         validarProducto(datos);
+
+        Genero genero = generoRepository.findById(idGenero)
+                .orElseThrow(() -> new RuntimeException("Género no encontrado"));
+
+        Categoria categoria = categoriaRepository.findById(idCategoria)
+                .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
+
+        normalizarProducto(datos);
 
         producto.setNombre(datos.getNombre());
         producto.setDescripcion(datos.getDescripcion());
         producto.setPrecio(datos.getPrecio());
         producto.setPrecioOferta(datos.getPrecioOferta());
         producto.setImagen(datos.getImagen());
-
-        producto.setNuevo(
-                Boolean.TRUE.equals(datos.getNuevo())
-        );
-
-        producto.setDestacado(
-                Boolean.TRUE.equals(datos.getDestacado())
-        );
-
+        producto.setNuevo(Boolean.TRUE.equals(datos.getNuevo()));
+        producto.setDestacado(Boolean.TRUE.equals(datos.getDestacado()));
         producto.setGenero(genero);
         producto.setCategoria(categoria);
 
@@ -165,51 +122,66 @@ public class ProductoService {
     }
 
     public void eliminar(Integer id) {
-
         Producto producto = productoRepository.findById(id)
-                .orElseThrow(() ->
-                        new RuntimeException("Producto no encontrado"));
+                .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
 
         producto.setEstado(false);
-
         productoRepository.save(producto);
     }
 
+    // =========================================================
+    // VALIDACIONES
+    // =========================================================
     private void validarProducto(Producto producto) {
-
-        if (producto.getNombre() == null ||
-                producto.getNombre().isBlank()) {
-
-            throw new RuntimeException(
-                    "El nombre del producto es obligatorio"
-            );
+        if (producto == null) {
+            throw new RuntimeException("Los datos del producto son obligatorios");
         }
 
-        if (producto.getPrecio() == null ||
-                producto.getPrecio().compareTo(BigDecimal.ZERO) <= 0) {
+        if (producto.getNombre() == null || producto.getNombre().isBlank()) {
+            throw new RuntimeException("El nombre del producto es obligatorio");
+        }
 
-            throw new RuntimeException(
-                    "El precio debe ser mayor que cero"
-            );
+        if (producto.getNombre().trim().length() > 150) {
+            throw new RuntimeException("El nombre no puede superar los 150 caracteres");
+        }
+
+        if (producto.getDescripcion() != null && producto.getDescripcion().trim().length() > 1000) {
+            throw new RuntimeException("La descripción no puede superar los 1000 caracteres");
+        }
+
+        if (producto.getImagen() != null && producto.getImagen().trim().length() > 255) {
+            throw new RuntimeException("El nombre de la imagen no puede superar los 255 caracteres");
+        }
+
+        if (producto.getPrecio() == null || producto.getPrecio().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new RuntimeException("El precio debe ser mayor que cero");
         }
 
         if (producto.getPrecioOferta() != null) {
-
-            if (producto.getPrecioOferta()
-                    .compareTo(BigDecimal.ZERO) <= 0) {
-
-                throw new RuntimeException(
-                        "El precio de oferta debe ser mayor que cero"
-                );
+            if (producto.getPrecioOferta().compareTo(BigDecimal.ZERO) <= 0) {
+                throw new RuntimeException("El precio de oferta debe ser mayor que cero");
             }
 
-            if (producto.getPrecioOferta()
-                    .compareTo(producto.getPrecio()) >= 0) {
-
-                throw new RuntimeException(
-                        "El precio de oferta debe ser menor al precio normal"
-                );
+            if (producto.getPrecioOferta().compareTo(producto.getPrecio()) >= 0) {
+                throw new RuntimeException("El precio de oferta debe ser menor al precio normal");
             }
+        }
+    }
+
+    // =========================================================
+    // NORMALIZACIÓN
+    // =========================================================
+    private void normalizarProducto(Producto producto) {
+        producto.setNombre(producto.getNombre().trim());
+
+        if (producto.getDescripcion() != null) {
+            String descripcion = producto.getDescripcion().trim();
+            producto.setDescripcion(descripcion.isEmpty() ? null : descripcion);
+        }
+
+        if (producto.getImagen() != null) {
+            String imagen = producto.getImagen().trim();
+            producto.setImagen(imagen.isEmpty() ? null : imagen);
         }
     }
 }
