@@ -31,3 +31,12 @@ build/
 
 ### VS Code ###
 .vscode/
+# Respaldos y secretos locales
+*.backup-local
+*.local.properties
+.env
+.env.*
+!.env.example
+
+# Imágenes almacenadas localmente
+/uploads/productos/

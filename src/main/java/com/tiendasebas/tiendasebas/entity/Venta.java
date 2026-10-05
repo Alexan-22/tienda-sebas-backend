@@ -1,12 +1,7 @@
 package com.tiendasebas.tiendasebas.entity;
 
 import jakarta.persistence.*;
-
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
+import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -23,7 +18,6 @@ public class Venta {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer idVenta;
 
-
     /*
      * =========================================================
      * CLIENTE ONLINE
@@ -35,11 +29,8 @@ public class Venta {
      * no necesita una cuenta registrada en usuarios.
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(
-            name = "id_usuario"
-    )
+    @JoinColumn(name = "id_usuario")
     private Usuario usuario;
-
 
     /*
      * =========================================================
@@ -52,11 +43,8 @@ public class Venta {
      * necesita usuario, contraseña ni acceso a la tienda web.
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(
-            name = "id_cliente_presencial"
-    )
+    @JoinColumn(name = "id_cliente_presencial")
     private ClientePresencial clientePresencial;
-
 
     /*
      * =========================================================
@@ -77,12 +65,8 @@ public class Venta {
      * ventas históricas existentes.
      */
     @Enumerated(EnumType.STRING)
-    @Column(
-            name = "tipo_venta",
-            length = 20
-    )
+    @Column(name = "tipo_venta", length = 20)
     private TipoVenta tipoVenta;
-
 
     /*
      * =========================================================
@@ -92,31 +76,19 @@ public class Venta {
     @Column(nullable = false)
     private LocalDateTime fechaVenta;
 
-
     /*
      * =========================================================
      * MONTOS
      * =========================================================
      */
-    @Column(
-            precision = 12,
-            scale = 2
-    )
+    @Column(precision = 12, scale = 2)
     private BigDecimal subtotal;
 
-    @Column(
-            precision = 12,
-            scale = 2
-    )
+    @Column(precision = 12, scale = 2)
     private BigDecimal costoDelivery;
 
-    @Column(
-            nullable = false,
-            precision = 12,
-            scale = 2
-    )
+    @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal total;
-
 
     /*
      * =========================================================
@@ -126,12 +98,8 @@ public class Venta {
      * Se conserva para mantener compatibilidad con las
      * ventas existentes.
      */
-    @Column(
-            nullable = false,
-            length = 50
-    )
+    @Column(nullable = false, length = 50)
     private String estado;
-
 
     /*
      * =========================================================
@@ -147,12 +115,8 @@ public class Venta {
      * Las ventas históricas pueden tener NULL.
      */
     @Enumerated(EnumType.STRING)
-    @Column(
-            name = "estado_pedido",
-            length = 30
-    )
+    @Column(name = "estado_pedido", length = 30)
     private EstadoPedido estadoPedido;
-
 
     /*
      * =========================================================
@@ -165,12 +129,8 @@ public class Venta {
      * PRESENCIAL:
      * EFECTIVO / YAPE / TARJETA
      */
-    @Column(
-            nullable = false,
-            length = 50
-    )
+    @Column(nullable = false, length = 50)
     private String medioPago;
-
 
     /*
      * =========================================================
@@ -183,24 +143,15 @@ public class Venta {
      * PRESENCIAL:
      * permanece NULL.
      */
-    @OneToOne(
-            cascade = CascadeType.ALL
-    )
-    @JoinColumn(
-            name = "id_direccion_envio"
-    )
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "id_direccion_envio")
     private DireccionEnvio direccionEnvio;
-
 
     /*
      * =========================================================
      * DETALLE DE VENTA
      * =========================================================
      */
-    @OneToMany(
-            mappedBy = "venta",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true
-    )
+    @OneToMany(mappedBy = "venta", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DetalleVenta> detalles;
 }

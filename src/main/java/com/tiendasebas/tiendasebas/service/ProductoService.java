@@ -7,7 +7,6 @@ import com.tiendasebas.tiendasebas.repository.CategoriaRepository;
 import com.tiendasebas.tiendasebas.repository.GeneroRepository;
 import com.tiendasebas.tiendasebas.repository.ProductoRepository;
 import org.springframework.stereotype.Service;
-
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -18,10 +17,7 @@ public class ProductoService {
     private final CategoriaRepository categoriaRepository;
     private final GeneroRepository generoRepository;
 
-    public ProductoService(
-            ProductoRepository productoRepository,
-            CategoriaRepository categoriaRepository,
-            GeneroRepository generoRepository) {
+    public ProductoService(ProductoRepository productoRepository, CategoriaRepository categoriaRepository, GeneroRepository generoRepository) {
         this.productoRepository = productoRepository;
         this.categoriaRepository = categoriaRepository;
         this.generoRepository = generoRepository;

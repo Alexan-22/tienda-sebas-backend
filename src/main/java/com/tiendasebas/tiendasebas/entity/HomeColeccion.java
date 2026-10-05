@@ -32,70 +32,29 @@ public class HomeColeccion {
     @Column(name = "estado", nullable = false)
     private Boolean estado = true;
 
-    public HomeColeccion() {
-    }
+    public HomeColeccion() {}
 
-    public Integer getIdColeccion() {
-        return idColeccion;
-    }
+    public Integer getIdColeccion() { return idColeccion; }
+    public void setIdColeccion(Integer idColeccion) { this.idColeccion = idColeccion; }
 
-    public void setIdColeccion(Integer idColeccion) {
-        this.idColeccion = idColeccion;
-    }
+    public String getTitulo() { return titulo; }
+    public void setTitulo(String titulo) { this.titulo = titulo; }
 
-    public String getTitulo() {
-        return titulo;
-    }
+    public String getEtiqueta() { return etiqueta; }
+    public void setEtiqueta(String etiqueta) { this.etiqueta = etiqueta; }
 
-    public void setTitulo(String titulo) {
-        this.titulo = titulo;
-    }
+    public String getTextoBoton() { return textoBoton; }
+    public void setTextoBoton(String textoBoton) { this.textoBoton = textoBoton; }
 
-    public String getEtiqueta() {
-        return etiqueta;
-    }
+    public String getEnlace() { return enlace; }
+    public void setEnlace(String enlace) { this.enlace = enlace; }
 
-    public void setEtiqueta(String etiqueta) {
-        this.etiqueta = etiqueta;
-    }
+    public String getImagen() { return imagen; }
+    public void setImagen(String imagen) { this.imagen = imagen; }
 
-    public String getTextoBoton() {
-        return textoBoton;
-    }
+    public Integer getOrden() { return orden; }
+    public void setOrden(Integer orden) { this.orden = orden; }
 
-    public void setTextoBoton(String textoBoton) {
-        this.textoBoton = textoBoton;
-    }
-
-    public String getEnlace() {
-        return enlace;
-    }
-
-    public void setEnlace(String enlace) {
-        this.enlace = enlace;
-    }
-
-    public String getImagen() {
-        return imagen;
-    }
-
-    public void setImagen(String imagen) {
-        this.imagen = imagen;
-    }
-
-    public Integer getOrden() {
-        return orden;
-    }
-
-    public void setOrden(Integer orden) {
-        this.orden = orden;
-    }
-
-    public Boolean getEstado() {
-        return estado;
-    }
-
-    public void setEstado(Boolean estado) {
-        this.estado = estado;
-    }
+    public Boolean getEstado() { return estado; }
+    public void setEstado(Boolean estado) { this.estado = estado; }
 }

@@ -3,9 +3,7 @@ package com.tiendasebas.tiendasebas.service;
 import com.tiendasebas.tiendasebas.dto.UsuarioAdminResponse;
 import com.tiendasebas.tiendasebas.entity.Usuario;
 import com.tiendasebas.tiendasebas.repository.UsuarioRepository;
-
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 
 @Service
@@ -13,107 +11,57 @@ public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
 
-
-    public UsuarioService(
-            UsuarioRepository usuarioRepository) {
-
-        this.usuarioRepository =
-                usuarioRepository;
+    public UsuarioService(UsuarioRepository usuarioRepository) {
+        this.usuarioRepository = usuarioRepository;
     }
-
 
     // =========================================================
     // LISTAR TODOS LOS USUARIOS
     // =========================================================
-
     public List<UsuarioAdminResponse> listarTodos() {
-
-        return usuarioRepository
-                .findAll()
-                .stream()
-                .map(this::convertirDto)
-                .toList();
+        return usuarioRepository.findAll().stream().map(this::convertirDto).toList();
     }
-
 
     // =========================================================
     // BUSCAR USUARIO POR ID
     // =========================================================
-
-    public UsuarioAdminResponse buscarPorId(
-            Integer idUsuario) {
-
-        Usuario usuario =
-                buscarEntidad(idUsuario);
-
+    public UsuarioAdminResponse buscarPorId(Integer idUsuario) {
+        Usuario usuario = buscarEntidad(idUsuario);
         return convertirDto(usuario);
     }
-
 
     // =========================================================
     // CAMBIAR ESTADO
     // =========================================================
-
-    public UsuarioAdminResponse cambiarEstado(
-            Integer idUsuario,
-            Boolean estado) {
-
+    public UsuarioAdminResponse cambiarEstado(Integer idUsuario, Boolean estado) {
         if (estado == null) {
-
-            throw new RuntimeException(
-                    "El estado es obligatorio"
-            );
+            throw new RuntimeException("El estado es obligatorio");
         }
 
-
-        Usuario usuario =
-                buscarEntidad(idUsuario);
-
-
+        Usuario usuario = buscarEntidad(idUsuario);
         usuario.setEstado(estado);
 
-
-        Usuario actualizado =
-                usuarioRepository.save(usuario);
-
-
+        Usuario actualizado = usuarioRepository.save(usuario);
         return convertirDto(actualizado);
     }
-
 
     // =========================================================
     // BUSCAR ENTIDAD
     // =========================================================
-
-    private Usuario buscarEntidad(
-            Integer idUsuario) {
-
-        return usuarioRepository
-                .findById(idUsuario)
-                .orElseThrow(() ->
-                        new RuntimeException(
-                                "Usuario no encontrado"
-                        )
-                );
+    private Usuario buscarEntidad(Integer idUsuario) {
+        return usuarioRepository.findById(idUsuario)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
     }
-
 
     // =========================================================
     // CONVERTIR ENTIDAD A DTO
     // =========================================================
-
-    private UsuarioAdminResponse convertirDto(
-            Usuario usuario) {
-
+    private UsuarioAdminResponse convertirDto(Usuario usuario) {
         String rol = "";
 
         if (usuario.getRol() != null) {
-
-            rol = usuario
-                    .getRol()
-                    .getNombreRol();
+            rol = usuario.getRol().getNombreRol();
         }
-
 
         return new UsuarioAdminResponse(
                 usuario.getIdUsuario(),

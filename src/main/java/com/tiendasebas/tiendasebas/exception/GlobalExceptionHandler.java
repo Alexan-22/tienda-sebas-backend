@@ -5,7 +5,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -18,11 +17,7 @@ public class GlobalExceptionHandler {
     // =========================================================
     @ExceptionHandler(CompraException.class)
     public ResponseEntity<Map<String, Object>> manejarCompraException(CompraException exception) {
-        return respuesta(
-                HttpStatus.CONFLICT,
-                "Error al procesar la compra",
-                exception.getMessage()
-        );
+        return respuesta(HttpStatus.CONFLICT, "Error al procesar la compra", exception.getMessage());
     }
 
     // =========================================================
@@ -35,11 +30,7 @@ public class GlobalExceptionHandler {
                 .map(error -> error.getDefaultMessage())
                 .orElse("Los datos ingresados no son válidos");
 
-        return respuesta(
-                HttpStatus.BAD_REQUEST,
-                "Error de validación",
-                mensaje
-        );
+        return respuesta(HttpStatus.BAD_REQUEST, "Error de validación", mensaje);
     }
 
     // =========================================================
@@ -48,16 +39,9 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Map<String, Object>> manejarRuntimeException(RuntimeException exception) {
         String mensaje = exception.getMessage();
+        if (mensaje == null || mensaje.isBlank()) mensaje = "No se pudo procesar la solicitud";
 
-        if (mensaje == null || mensaje.isBlank()) {
-            mensaje = "No se pudo procesar la solicitud";
-        }
-
-        return respuesta(
-                HttpStatus.BAD_REQUEST,
-                "Error en la solicitud",
-                mensaje
-        );
+        return respuesta(HttpStatus.BAD_REQUEST, "Error en la solicitud", mensaje);
     }
 
     // =========================================================
@@ -66,22 +50,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> manejarException(Exception exception) {
         exception.printStackTrace();
-
-        return respuesta(
-                HttpStatus.INTERNAL_SERVER_ERROR,
-                "Error interno del servidor",
-                "Ocurrió un error inesperado. Inténtalo nuevamente."
-        );
+        return respuesta(HttpStatus.INTERNAL_SERVER_ERROR, "Error interno del servidor", "Ocurrió un error inesperado. Inténtalo nuevamente.");
     }
 
     // =========================================================
     // RESPUESTA ESTÁNDAR
     // =========================================================
-    private ResponseEntity<Map<String, Object>> respuesta(
-            HttpStatus status,
-            String error,
-            String mensaje
-    ) {
+    private ResponseEntity<Map<String, Object>> respuesta(HttpStatus status, String error, String mensaje) {
         Map<String, Object> respuesta = new LinkedHashMap<>();
         respuesta.put("timestamp", LocalDateTime.now());
         respuesta.put("status", status.value());

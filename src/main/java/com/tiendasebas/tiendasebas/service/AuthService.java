@@ -19,17 +19,16 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
-    public AuthService(UsuarioRepository usuarioRepository, RolRepository rolRepository,
-                       PasswordEncoder passwordEncoder, JwtService jwtService) {
+    public AuthService(UsuarioRepository usuarioRepository, RolRepository rolRepository, PasswordEncoder passwordEncoder, JwtService jwtService) {
         this.usuarioRepository = usuarioRepository;
         this.rolRepository = rolRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
     }
 
-    // =========================================================
+    // --------------------------------------------------------
     // REGISTRAR USUARIO
-    // =========================================================
+    // --------------------------------------------------------
     public String registrar(RegistroRequest request) {
         String nombre = request.getNombre().trim();
         String apellido = request.getApellido().trim();
@@ -54,9 +53,9 @@ public class AuthService {
         return "Usuario registrado correctamente";
     }
 
-    // =========================================================
+    // ----------------------------------------------------------
     // LOGIN
-    // =========================================================
+    // ----------------------------------------------------------
     public LoginResponse login(LoginRequest request) {
         String correo = request.getCorreo().trim().toLowerCase();
 

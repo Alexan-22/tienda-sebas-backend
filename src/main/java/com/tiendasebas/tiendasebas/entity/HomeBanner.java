@@ -35,88 +35,32 @@ public class HomeBanner {
     @Column(name = "estado", nullable = false)
     private Boolean estado = true;
 
+    public HomeBanner() {}
 
-    public HomeBanner() {
-    }
+    public Integer getIdBanner() { return idBanner; }
+    public void setIdBanner(Integer idBanner) { this.idBanner = idBanner; }
 
+    public String getEtiqueta() { return etiqueta; }
+    public void setEtiqueta(String etiqueta) { this.etiqueta = etiqueta; }
 
-    public Integer getIdBanner() {
-        return idBanner;
-    }
+    public String getTitulo() { return titulo; }
+    public void setTitulo(String titulo) { this.titulo = titulo; }
 
-    public void setIdBanner(Integer idBanner) {
-        this.idBanner = idBanner;
-    }
+    public String getDescripcion() { return descripcion; }
+    public void setDescripcion(String descripcion) { this.descripcion = descripcion; }
 
+    public String getTextoBoton() { return textoBoton; }
+    public void setTextoBoton(String textoBoton) { this.textoBoton = textoBoton; }
 
-    public String getEtiqueta() {
-        return etiqueta;
-    }
+    public String getEnlaceBoton() { return enlaceBoton; }
+    public void setEnlaceBoton(String enlaceBoton) { this.enlaceBoton = enlaceBoton; }
 
-    public void setEtiqueta(String etiqueta) {
-        this.etiqueta = etiqueta;
-    }
+    public String getImagen() { return imagen; }
+    public void setImagen(String imagen) { this.imagen = imagen; }
 
+    public Integer getOrden() { return orden; }
+    public void setOrden(Integer orden) { this.orden = orden; }
 
-    public String getTitulo() {
-        return titulo;
-    }
-
-    public void setTitulo(String titulo) {
-        this.titulo = titulo;
-    }
-
-
-    public String getDescripcion() {
-        return descripcion;
-    }
-
-    public void setDescripcion(String descripcion) {
-        this.descripcion = descripcion;
-    }
-
-
-    public String getTextoBoton() {
-        return textoBoton;
-    }
-
-    public void setTextoBoton(String textoBoton) {
-        this.textoBoton = textoBoton;
-    }
-
-
-    public String getEnlaceBoton() {
-        return enlaceBoton;
-    }
-
-    public void setEnlaceBoton(String enlaceBoton) {
-        this.enlaceBoton = enlaceBoton;
-    }
-
-
-    public String getImagen() {
-        return imagen;
-    }
-
-    public void setImagen(String imagen) {
-        this.imagen = imagen;
-    }
-
-
-    public Integer getOrden() {
-        return orden;
-    }
-
-    public void setOrden(Integer orden) {
-        this.orden = orden;
-    }
-
-
-    public Boolean getEstado() {
-        return estado;
-    }
-
-    public void setEstado(Boolean estado) {
-        this.estado = estado;
-    }
+    public Boolean getEstado() { return estado; }
+    public void setEstado(Boolean estado) { this.estado = estado; }
 }

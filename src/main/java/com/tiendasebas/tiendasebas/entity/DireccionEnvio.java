@@ -2,7 +2,6 @@ package com.tiendasebas.tiendasebas.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-
 import java.math.BigDecimal;
 
 @Entity
@@ -32,10 +31,6 @@ public class DireccionEnvio {
     @Column(length = 255)
     private String referencia;
 
-    @Column(
-            nullable = false,
-            precision = 10,
-            scale = 2
-    )
+    @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal costoDelivery;
 }

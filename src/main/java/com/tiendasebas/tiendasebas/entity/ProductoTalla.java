@@ -4,15 +4,9 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(
-        name = "ProductoTallas",
-        uniqueConstraints = {
-                @UniqueConstraint(
-                        name = "UQ_Producto_Talla",
-                        columnNames = {"IdProducto", "IdTalla"}
-                )
-        }
-)
+@Table(name = "ProductoTallas", uniqueConstraints = {
+        @UniqueConstraint(name = "UQ_Producto_Talla", columnNames = {"IdProducto", "IdTalla"})
+})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

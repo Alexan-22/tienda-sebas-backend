@@ -6,6 +6,5 @@ import lombok.Data;
 public class CompraItemDto {
 
     private Integer idProductoTalla;
-
     private Integer cantidad;
 }

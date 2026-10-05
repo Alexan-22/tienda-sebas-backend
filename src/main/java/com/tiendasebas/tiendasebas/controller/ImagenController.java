@@ -4,10 +4,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.io.IOException;
 import java.nio.file.*;
-
 import java.util.UUID;
 
 @RestController
@@ -18,48 +16,25 @@ public class ImagenController {
     private String uploadDir;
 
     @PostMapping("/producto")
-    public ResponseEntity<String> subirImagen(
-            @RequestParam("imagen") MultipartFile imagen)
-            throws IOException {
-
+    public ResponseEntity<String> subirImagen(@RequestParam("imagen") MultipartFile imagen) throws IOException {
         if (imagen.isEmpty()) {
-            return ResponseEntity.badRequest()
-                    .body("No se recibió ninguna imagen");
+            return ResponseEntity.badRequest().body("No se recibió ninguna imagen");
         }
 
-        String nombreOriginal =
-                imagen.getOriginalFilename();
-
+        String nombreOriginal = imagen.getOriginalFilename();
         String extension = "";
 
-        if (nombreOriginal != null &&
-                nombreOriginal.contains(".")) {
-
-            extension =
-                    nombreOriginal.substring(
-                            nombreOriginal.lastIndexOf(".")
-                    );
+        if (nombreOriginal != null && nombreOriginal.contains(".")) {
+            extension = nombreOriginal.substring(nombreOriginal.lastIndexOf("."));
         }
 
-        String nombreArchivo =
-                UUID.randomUUID() + extension;
-
-        Path directorio =
-                Paths.get(uploadDir);
-
+        String nombreArchivo = UUID.randomUUID() + extension;
+        Path directorio = Paths.get(uploadDir);
         Files.createDirectories(directorio);
 
-        Path archivo =
-                directorio.resolve(nombreArchivo);
+        Path archivo = directorio.resolve(nombreArchivo);
+        Files.copy(imagen.getInputStream(), archivo, StandardCopyOption.REPLACE_EXISTING);
 
-        Files.copy(
-                imagen.getInputStream(),
-                archivo,
-                StandardCopyOption.REPLACE_EXISTING
-        );
-
-        return ResponseEntity.ok(
-                nombreArchivo
-        );
+        return ResponseEntity.ok(nombreArchivo);
     }
 }
