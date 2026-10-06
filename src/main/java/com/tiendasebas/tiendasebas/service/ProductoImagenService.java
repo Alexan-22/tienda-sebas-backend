@@ -1,3 +1,4 @@
+
 package com.tiendasebas.tiendasebas.service;
 
 import com.tiendasebas.tiendasebas.entity.Producto;
@@ -21,15 +22,22 @@ public class ProductoImagenService {
 
     private final ProductoImagenRepository productoImagenRepository;
     private final ProductoRepository productoRepository;
+    private final SupabaseStorageService supabaseStorageService;
 
     @Value("${app.upload.dir}")
     private String uploadDir;
 
+    @Value("${app.storage.provider:local}")
+    private String storageProvider;
+
     private static final Set<String> TIPOS_PERMITIDOS = Set.of("image/jpeg", "image/png", "image/webp");
 
-    public ProductoImagenService(ProductoImagenRepository productoImagenRepository, ProductoRepository productoRepository) {
+    public ProductoImagenService(ProductoImagenRepository productoImagenRepository,
+                                 ProductoRepository productoRepository,
+                                 SupabaseStorageService supabaseStorageService) {
         this.productoImagenRepository = productoImagenRepository;
         this.productoRepository = productoRepository;
+        this.supabaseStorageService = supabaseStorageService;
     }
 
     // ============================================================
@@ -39,9 +47,9 @@ public class ProductoImagenService {
         if (!productoRepository.existsById(idProducto)) {
             throw new RuntimeException("Producto no encontrado");
         }
-
         return productoImagenRepository.findByProductoIdProductoOrderByOrdenAsc(idProducto);
     }
+
 
     // ============================================================
     // SUBIR Y REGISTRAR IMAGEN
@@ -52,32 +60,56 @@ public class ProductoImagenService {
 
         validarArchivo(archivo);
 
-        try {
-            Path directorio = Paths.get(uploadDir).toAbsolutePath().normalize();
-            Files.createDirectories(directorio);
+        String extension = obtenerExtension(archivo.getOriginalFilename());
+        String nombreArchivo = UUID.randomUUID() + "." + extension;
+        boolean supabase = "supabase".equalsIgnoreCase(storageProvider);
 
-            String extension = obtenerExtension(archivo.getOriginalFilename());
-            String nombreArchivo = UUID.randomUUID() + "." + extension;
-            Path destino = directorio.resolve(nombreArchivo).normalize();
+        if (supabase) {
+            // Producción: guardar en Supabase Storage
+            supabaseStorageService.subir(archivo, "productos/" + nombreArchivo);
+        } else if ("local".equalsIgnoreCase(storageProvider)) {
+            // Desarrollo: conservar almacenamiento local
+            try {
+                Path directorio = Paths.get(uploadDir).toAbsolutePath().normalize();
+                Files.createDirectories(directorio);
+                Path destino = directorio.resolve(nombreArchivo).normalize();
 
-            // Seguridad: evita salir del directorio uploads
-            if (!destino.startsWith(directorio)) {
-                throw new RuntimeException("Ruta de archivo no permitida");
+                // Seguridad: evita salir del directorio uploads
+                if (!destino.startsWith(directorio)) {
+                    throw new RuntimeException("Ruta de archivo no permitida");
+                }
+
+                Files.copy(archivo.getInputStream(), destino, StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException e) {
+                throw new RuntimeException("Error al guardar la imagen", e);
             }
+        } else {
+            throw new IllegalStateException("Proveedor de almacenamiento no válido");
+        }
 
-            Files.copy(archivo.getInputStream(), destino, StandardCopyOption.REPLACE_EXISTING);
+        ProductoImagen productoImagen = new ProductoImagen();
+        productoImagen.setProducto(producto);
+        productoImagen.setImagen(nombreArchivo);
+        productoImagen.setOrden(orden != null ? orden : 0);
 
-            ProductoImagen productoImagen = new ProductoImagen();
-            productoImagen.setProducto(producto);
-            productoImagen.setImagen(nombreArchivo);
-            productoImagen.setOrden(orden != null ? orden : 0);
-
+        try {
             return productoImagenRepository.save(productoImagen);
-
-        } catch (IOException e) {
-            throw new RuntimeException("Error al guardar la imagen", e);
+        } catch (RuntimeException e) {
+            // Evitar dejar archivos huérfanos si falla PostgreSQL
+            try {
+                if (supabase) {
+                    supabaseStorageService.eliminar("productos/" + nombreArchivo);
+                } else {
+                    Files.deleteIfExists(Paths.get(uploadDir).toAbsolutePath()
+                            .normalize().resolve(nombreArchivo));
+                }
+            } catch (Exception cleanupError) {
+                e.addSuppressed(cleanupError);
+            }
+            throw e;
         }
     }
+
 
     // ============================================================
     // ELIMINAR IMAGEN
@@ -86,16 +118,27 @@ public class ProductoImagenService {
         ProductoImagen imagen = productoImagenRepository.findById(idImagen)
                 .orElseThrow(() -> new RuntimeException("Imagen no encontrada"));
 
-        try {
-            Path archivo = Paths.get(uploadDir).toAbsolutePath().normalize()
-                    .resolve(imagen.getImagen()).normalize();
+        if ("supabase".equalsIgnoreCase(storageProvider)) {
+            // Producción: eliminar imagen de Supabase Storage
+            supabaseStorageService.eliminar("productos/" + imagen.getImagen());
 
-            if (archivo.startsWith(Paths.get(uploadDir).toAbsolutePath().normalize())) {
+        } else if ("local".equalsIgnoreCase(storageProvider)) {
+            // Desarrollo: eliminar imagen local
+            try {
+                Path directorio = Paths.get(uploadDir).toAbsolutePath().normalize();
+                Path archivo = directorio.resolve(imagen.getImagen()).normalize();
+
+                if (!archivo.startsWith(directorio)) {
+                    throw new RuntimeException("Ruta de archivo no permitida");
+                }
+
                 Files.deleteIfExists(archivo);
-            }
 
-        } catch (IOException e) {
-            throw new RuntimeException("No se pudo eliminar el archivo de imagen", e);
+            } catch (IOException e) {
+                throw new RuntimeException("No se pudo eliminar el archivo de imagen", e);
+            }
+        } else {
+            throw new IllegalStateException("Proveedor de almacenamiento no válido");
         }
 
         productoImagenRepository.delete(imagen);

@@ -1,3 +1,4 @@
+
 package com.tiendasebas.tiendasebas.service;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -18,9 +19,17 @@ public class HomeImagenService {
     @Value("${app.upload.dir}")
     private String uploadDir;
 
+    @Value("${app.storage.provider:local}")
+    private String storageProvider;
+
+    private final SupabaseStorageService supabaseStorageService;
+
+    public HomeImagenService(SupabaseStorageService supabaseStorageService) {
+        this.supabaseStorageService = supabaseStorageService;
+    }
+
     /*
      * Tipos MIME permitidos.
-     *
      * JFIF normalmente llega desde el navegador
      * como image/jpeg, por eso comparte MIME
      * con JPG y JPEG.
@@ -58,21 +67,36 @@ public class HomeImagenService {
     private String guardar(MultipartFile archivo, String subcarpeta) {
         validarArchivo(archivo);
 
+        /*
+         * Obtener extensión validada.
+         * Generamos un nombre único para
+         * evitar sobrescribir imágenes.
+         */
+        String extension = obtenerExtension(archivo.getOriginalFilename());
+        String nombreArchivo = UUID.randomUUID() + "." + extension;
+        String rutaRelativa = subcarpeta + "/" + nombreArchivo;
+
+        // Producción: guardar en Supabase Storage.
+        if ("supabase".equalsIgnoreCase(storageProvider)) {
+            supabaseStorageService.subir(archivo, "productos/" + rutaRelativa);
+            return rutaRelativa;
+        }
+
+        if (!"local".equalsIgnoreCase(storageProvider)) {
+            throw new IllegalStateException("Proveedor de almacenamiento no válido");
+        }
+
         try {
             /*
              * Directorio configurado en:
-             *
              * application.properties
-             *
              * app.upload.dir=uploads/productos
              */
             Path directorioBase = Paths.get(uploadDir).toAbsolutePath().normalize();
 
             /*
              * Ejemplos:
-             *
              * uploads/productos/home/banner
-             *
              * uploads/productos/home/colecciones
              */
             Path directorio = directorioBase.resolve(subcarpeta).normalize();
@@ -93,19 +117,9 @@ public class HomeImagenService {
             Files.createDirectories(directorio);
 
             /*
-             * Obtener extensión validada.
-             */
-            String extension = obtenerExtension(archivo.getOriginalFilename());
-
-            /*
-             * Generamos un nombre único para
-             * evitar sobrescribir imágenes.
-             *
              * Ejemplo:
-             *
              * 1e8d...-42a1.jfif
              */
-            String nombreArchivo = UUID.randomUUID() + "." + extension;
             Path destino = directorio.resolve(nombreArchivo).normalize();
 
             /*
@@ -125,14 +139,11 @@ public class HomeImagenService {
              * la ruta absoluta de Windows.
              *
              * Guardamos solamente:
-             *
              * home/banner/archivo.jpg
-             *
              * o
-             *
              * home/colecciones/archivo.jfif
              */
-            return subcarpeta + "/" + nombreArchivo;
+            return rutaRelativa;
 
         } catch (IOException e) {
             throw new RuntimeException("Error al guardar la imagen", e);
@@ -145,6 +156,16 @@ public class HomeImagenService {
     public void eliminar(String rutaRelativa) {
         if (rutaRelativa == null || rutaRelativa.isBlank()) {
             return;
+        }
+
+        // Producción: eliminar de Supabase Storage.
+        if ("supabase".equalsIgnoreCase(storageProvider)) {
+            supabaseStorageService.eliminar("productos/" + rutaRelativa);
+            return;
+        }
+
+        if (!"local".equalsIgnoreCase(storageProvider)) {
+            throw new IllegalStateException("Proveedor de almacenamiento no válido");
         }
 
         try {
@@ -188,14 +209,8 @@ public class HomeImagenService {
 
         /*
          * Validar extensión.
-         *
          * Admitimos:
-         *
-         * JPG
-         * JPEG
-         * JFIF
-         * PNG
-         * WEBP
+         * JPG, JPEG, JFIF, PNG, WEBP.
          */
         String extension = obtenerExtension(archivo.getOriginalFilename());
 
@@ -205,10 +220,8 @@ public class HomeImagenService {
 
         /*
          * Validar MIME enviado por el navegador.
-         *
          * Un archivo .jfif normalmente utiliza:
-         *
-         * image/jpeg
+         * image/jpeg.
          */
         String contentType = archivo.getContentType();
 
@@ -224,7 +237,6 @@ public class HomeImagenService {
 
         /*
          * Comprobación adicional:
-         *
          * JPG, JPEG y JFIF deben llegar
          * como image/jpeg o image/jpg.
          */
