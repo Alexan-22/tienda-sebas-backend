@@ -19,6 +19,9 @@ public class SupabaseStorageService {
     @Value("${app.supabase.storage-key:}")
     private String storageKey;
 
+    @Value("${app.supabase.service-role-key:}")
+    private String serviceRole;
+
     @Value("${app.supabase.bucket:tienda-sebas}")
     private String bucket;
 
@@ -52,7 +55,7 @@ public class SupabaseStorageService {
             client.post()
                     .uri(supabaseUrl + "/storage/v1/object/" + bucket + "/" + ruta)
                     .header("apikey", storageKey)
-                    .header("Authorization", "Bearer " + storageKey)
+                    .header("Authorization", "Bearer " + serviceRole)
                     .contentType(MediaType.parseMediaType(archivo.getContentType()))
                     .body(archivo.getBytes())
                     .retrieve()
@@ -74,7 +77,7 @@ public class SupabaseStorageService {
         client.delete()
                 .uri(supabaseUrl + "/storage/v1/object/" + bucket + "/" + ruta)
                 .header("apikey", storageKey)
-                .header("Authorization", "Bearer " + storageKey)
+                .header("Authorization", "Bearer " + serviceRole)
                 .retrieve()
                 .toBodilessEntity();
     }
