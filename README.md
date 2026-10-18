@@ -1,272 +1,388 @@
-# Tienda Sebas – Backend
+# Sebas Collection | Backend
 
-**Sistema de gestión de tienda de ropa, ventas online y punto de venta (POS)**
+API REST para una plataforma de comercio electrónico y punto de venta de una tienda de ropa.
 
-Tienda Sebas es una aplicación de comercio electrónico desarrollada con **Java 21**, **Spring Boot** y **PostgreSQL**. Su API REST permite administrar usuarios, catálogo de productos, categorías, géneros, tallas, inventario, imágenes, compras online, ventas presenciales y comprobantes. Se integra con un frontend desarrollado en **Angular, TypeScript y Tailwind CSS**.
+Desarrollada con Java 21, Spring Boot y PostgreSQL. Proporciona autenticación, gestión de catálogo e inventario, compras online, ventas presenciales y consultas para reportes.
 
-## 1. Tecnologías utilizadas
+**Aplicación web:** [www.sebascollection.com](https://www.sebascollection.com/)
 
-- Java 21
-- Spring Boot 4.1.1
-- Spring Web y Spring Data JPA (Hibernate)
-- Spring Security y autenticación JWT
-- PostgreSQL
-- Maven / Maven Wrapper
-- IntelliJ IDEA
-- pgAdmin 4 y Postman (opcionales)
-- Git y GitHub
+**Autor:** Alexander Ancori Conza  
+**Arquitectura:** Aplicación monolítica organizada por capas.
 
-## 2. Arquitectura del proyecto
+## Descripción
 
-El backend es una **aplicación Spring Boot única** organizada por responsabilidades; no utiliza microservicios ni Eureka.
+El backend centraliza las reglas de negocio de Sebas Collection y permite gestionar las ventas realizadas desde la tienda online y desde el punto de venta presencial.
 
-```text
-TiendaSebas/
-├── mvnw / mvnw.cmd
-├── pom.xml
-├── .gitignore
-└── src/
-    └── main/
-        ├── java/com/tiendasebas/tiendasebas/
-        │   ├── config/         # Configuración y CORS
-        │   ├── controller/     # Endpoints REST
-        │   ├── dto/            # Solicitudes y respuestas
-        │   ├── entity/         # Entidades JPA
-        │   ├── exception/      # Manejo de errores
-        │   ├── repository/     # Acceso a PostgreSQL
-        │   ├── security/       # Seguridad JWT
-        │   └── service/        # Reglas de negocio
-        └── resources/
-            ├── application.properties
-            ├── application-dev.properties
-            ├── application-prod.properties
-            └── db/migration/  # SQL de referencia del proyecto
-```
+Se integra con un frontend Angular desplegado de forma independiente.
 
-El frontend Angular consume la API en `http://localhost:8080` durante el desarrollo.
+El proyecto conserva el nombre técnico Tienda Sebas en algunos paquetes y configuraciones.
 
-## 3. Requisitos previos
+## Tecnologías
 
-1. **JDK 21** instalado y configurado.
-2. **PostgreSQL** instalado y en ejecución (por defecto, puerto `5432`).
-3. **IntelliJ IDEA** o un editor compatible con Java y Maven.
-4. **Git** para clonar el repositorio.
-5. **pgAdmin 4** y **Postman** (opcionales).
+- Java 21.
+- Spring Boot.
+- Spring Web.
+- Spring Security y JWT.
+- Spring Data JPA e Hibernate.
+- PostgreSQL.
+- Maven Wrapper.
+- GitHub Actions.
+- Azure App Service.
+- Supabase.
 
-Verificar desde PowerShell:
+La versión de Spring Boot y las dependencias exactas están definidas en `pom.xml`.
+
+## Funcionalidades
+
+| Módulo | Alcance |
+|---|---|
+| Autenticación | Registro, login y validación de JWT |
+| Usuarios | Roles, estado y administración de cuentas |
+| Catálogo | Productos, categorías, géneros, ofertas e imágenes |
+| Inventario | Existencias por producto y talla |
+| Compras online | Registro de compras y detalle |
+| Ventas presenciales | Operaciones del punto de venta |
+| Clientes presenciales | Registro de clientes para ventas en tienda |
+| Comprobantes | Información para consulta e impresión |
+| Reportes | Consultas de ventas, productos, categorías, pagos y canales |
+
+Los importes monetarios se manejan con `BigDecimal`.
+
+Las ventas distinguen su origen ONLINE o PRESENCIAL para facilitar el análisis y los reportes.
+
+## Arquitectura
+
+El backend es una aplicación Spring Boot única; no utiliza microservicios ni Eureka.
+
+Organización por responsabilidades:
+
+| Capa | Responsabilidad |
+|---|---|
+| controller | Endpoints HTTP |
+| dto | Solicitudes y respuestas |
+| service | Reglas de negocio |
+| repository | Acceso a PostgreSQL |
+| entity | Entidades JPA |
+| security | Autenticación y autorización |
+| config | Configuración de la aplicación |
+| exception | Manejo de errores |
+
+Consultar los paquetes del repositorio para la estructura actual.
+
+## Despliegue
+
+| Componente | Entorno |
+|---|---|
+| API REST | Azure App Service Linux |
+| Base de datos PostgreSQL | Supabase |
+| Frontend Angular | Azure App Service independiente |
+| Sitio público | https://www.sebascollection.com/ |
+| Automatización del backend | GitHub Actions |
+
+El despliegue del backend utiliza variables de entorno para separar la configuración de las credenciales.
+
+La base de datos y el almacenamiento de imágenes requieren sus propias estrategias de respaldo.
+
+## Seguridad
+
+- Contraseñas protegidas mediante hash.
+- Autenticación JWT.
+- Roles ADMIN y CLIENTE.
+- Validación del estado y rol del usuario desde la base de datos.
+- Restricción de operaciones administrativas.
+- Configuración CORS para los orígenes autorizados.
+- Uso de HTTPS en producción.
+
+El backend valida los permisos; ocultar opciones en Angular no sustituye esa autorización.
+
+No se incluyen cuentas administrativas ni credenciales reales en este documento.
+
+## Requisitos
+
+- JDK 21.
+- PostgreSQL local o una instancia accesible.
+- Git.
+- Editor compatible con Java.
+- Acceso a las variables privadas del entorno.
+
+Verificar herramientas:
 
 ```powershell
 java -version
 git --version
 ```
 
-El proyecto incluye **Maven Wrapper** (`mvnw.cmd`), por lo que no es obligatorio instalar Maven globalmente.
+El repositorio incluye Maven Wrapper.
 
-## 4. Descargar el proyecto desde GitHub
+## Descargar el proyecto
 
 ```powershell
-cd D:\Proyectos
 git clone https://github.com/Alexan-22/tienda-sebas-backend.git
 cd tienda-sebas-backend
 ```
 
-> Si el repositorio es privado, necesitarás una cuenta con permisos de acceso. También puedes abrir la carpeta local del proyecto en IntelliJ IDEA.
+Si el repositorio requiere permisos, autenticarse con una cuenta autorizada.
 
-## 5. Abrir el proyecto en IntelliJ IDEA
+## Base de datos local
 
-1. Abrir **IntelliJ IDEA → File → Open**.
-2. Seleccionar la carpeta del backend.
-3. Esperar la importación de dependencias Maven.
-4. Configurar el **Project SDK** en **Java 21**.
-5. Comprobar que PostgreSQL esté activo.
+Crear una base de datos denominada `TiendaSebas`, respetando el nombre configurado en la URL JDBC.
 
-## 6. Configurar PostgreSQL
+Ejemplo en PostgreSQL:
 
-Desde **pgAdmin 4**:
+```sql
+CREATE DATABASE "TiendaSebas";
+```
 
-1. Conectarse al servidor PostgreSQL local.
-2. En **Databases**, seleccionar **Create → Database**.
-3. Crear una base de datos llamada **`TiendaSebas`**.
-4. Comprobar que el usuario configurado tenga acceso a esa base de datos.
-
-Valores locales de referencia:
+Valores locales habituales:
 
 | Parámetro | Valor |
 |---|---|
-| Host | `localhost` |
-| Puerto | `5432` |
-| Base de datos | `TiendaSebas` |
-| Usuario de ejemplo | `postgres` |
+| Host | localhost |
+| Puerto | 5432 |
+| Base de datos | TiendaSebas |
+| Usuario | postgres |
 
-**Importante:** crear la base de datos vacía no equivale a recuperar los datos existentes. Para trasladar la tienda real se necesita una **copia de seguridad y restauración** de PostgreSQL. No subir respaldos con datos de clientes ni credenciales al repositorio.
+Crear una base vacía no restaura productos, usuarios, inventario ni ventas existentes.
 
-## 7. Configuración de perfiles y variables de entorno
+Para trasladar una instalación con datos se necesita restaurar su respaldo y aplicar los cambios de esquema correspondientes.
 
-Los archivos de configuración son:
+## Perfiles de configuración
 
-- `application.properties`: configuración común y selección del perfil.
-- `application-dev.properties`: desarrollo local; Hibernate utiliza `ddl-auto=update`.
-- `application-prod.properties`: producción; Hibernate utiliza `ddl-auto=validate`.
+| Archivo | Uso |
+|---|---|
+| application.properties | Configuración común |
+| application-dev.properties | Desarrollo local |
+| application-prod.properties | Producción |
 
-**Nunca escribir contraseñas reales ni claves JWT en archivos versionados.** Para iniciar localmente, configurar en la **misma terminal** PowerShell:
+En la configuración documentada del proyecto:
+
+- Desarrollo utiliza `ddl-auto=update`.
+- Producción utiliza `ddl-auto=validate`.
+
+En producción, Hibernate valida el esquema; no crea automáticamente las tablas.
+
+## Variables de entorno
+
+| Variable | Función |
+|---|---|
+| SPRING_PROFILES_ACTIVE | Perfil de ejecución |
+| DB_URL | Conexión JDBC PostgreSQL |
+| DB_USERNAME | Usuario de base de datos |
+| DB_PASSWORD | Contraseña de base de datos |
+| JWT_SECRET | Clave de firma de tokens |
+| CORS_ALLOWED_ORIGINS | Orígenes permitidos |
+| UPLOAD_DIR | Directorio de imágenes |
+| JWT_EXPIRATION | Vigencia del token, si está configurada |
+| PORT | Puerto HTTP, si está configurado |
+
+No publicar sus valores privados en GitHub.
+
+### Configuración local en PowerShell
+
+Ejecutar en la misma terminal que iniciará el backend:
 
 ```powershell
 $env:SPRING_PROFILES_ACTIVE = "dev"
-$env:DB_PASSWORD = "TU_PASSWORD_LOCAL"
-$env:JWT_SECRET = "TU_CLAVE_JWT_SEGURA"
+$env:DB_URL = "jdbc:postgresql://localhost:5432/TiendaSebas"
+$env:DB_USERNAME = "postgres"
+
+$credencial = Get-Credential -UserName "postgres" -Message "Credenciales PostgreSQL"
+$env:DB_PASSWORD = $credencial.GetNetworkCredential().Password
 ```
 
-Reemplazar los valores de ejemplo en tu computadora, **sin compartirlos ni copiarlos a GitHub**. La clave JWT debe ser suficientemente larga y aleatoria según el algoritmo configurado.
+Configurar también `JWT_SECRET` mediante el mecanismo privado utilizado en la instalación. Su formato debe coincidir con lo que espera la implementación JWT.
 
-Otras variables admitidas:
+No utilizar una clave de ejemplo en producción.
 
-| Variable | Uso | Desarrollo |
-|---|---|---|
-| `DB_URL` | JDBC PostgreSQL | `jdbc:postgresql://localhost:5432/TiendaSebas` |
-| `DB_USERNAME` | Usuario de PostgreSQL | `postgres` |
-| `DB_PASSWORD` | Contraseña PostgreSQL | Obligatoria |
-| `JWT_SECRET` | Clave de firma JWT | Obligatoria |
-| `SPRING_PROFILES_ACTIVE` | Perfil | `dev` |
-| `PORT` | Puerto HTTP | `8080` |
-| `JWT_EXPIRATION` | Vigencia del token en ms | `86400000` |
-
-Para **producción** también se requieren `UPLOAD_DIR` (directorio persistente de imágenes) y `CORS_ALLOWED_ORIGINS` (origen HTTPS real del frontend), además de los datos de conexión y la clave JWT. No utilizar valores de prueba en producción.
-
-## 8. Ejecutar el backend
-
-Desde la carpeta raíz del backend, en la misma terminal donde configuraste las variables:
+## Ejecutar localmente
 
 ```powershell
 .\mvnw.cmd spring-boot:run
 ```
 
-Si inicia correctamente, el servidor estará disponible en:
+Dirección habitual:
 
-**http://localhost:8080**
+```text
+http://localhost:8080
+```
 
-No cerrar la terminal mientras se utiliza la aplicación. Para detenerla, presionar **Ctrl + C**.
+Para detener el proceso:
 
-Para comprobar compilación:
+```text
+Ctrl + C
+```
+
+## Compilar y ejecutar pruebas
+
+```powershell
+.\mvnw.cmd clean verify
+```
+
+El comando compila y ejecuta las comprobaciones configuradas en Maven. Puede requerir una base de datos y variables de entorno disponibles.
+
+Para generar el paquete:
 
 ```powershell
 .\mvnw.cmd clean package
 ```
 
-## 9. Funcionalidades principales
+Los archivos generados se encuentran en `target/`.
 
-| Módulo | Descripción |
-|---|---|
-| Autenticación y usuarios | Registro, inicio de sesión, roles `ADMIN` y `CLIENTE` |
-| Catálogo | Productos por género y categoría, precios e imágenes |
-| Inventario | Tallas, stock y estado de productos |
-| Compra online | Checkout, pedidos y detalle de compra |
-| Administración | Gestión de productos, usuarios, ventas y existencias |
-| POS | Clientes presenciales y ventas en tienda |
-| Imágenes | Carga y consulta de imágenes de productos |
-| Reportes | Datos de ventas para el frontend administrativo |
+La ejecución de estos comandos no implica por sí sola que todos los flujos de negocio estén cubiertos por pruebas automatizadas.
 
-Las operaciones administrativas requieren autenticación y permisos apropiados.
+## Rutas de referencia
 
-## 10. Probar la API con Postman
+Base local:
 
-Iniciar el backend y abrir Postman. Algunas rutas conocidas del proyecto:
+```text
+http://localhost:8080
+```
 
 | Método | Ruta | Descripción |
 |---|---|---|
-| `GET` | `http://localhost:8080/api/generos` | Consultar géneros |
-| `GET` | `http://localhost:8080/api/categorias` | Consultar categorías |
-| `GET` | `http://localhost:8080/api/productos/public` | Listar productos públicos |
-| `GET` | `http://localhost:8080/api/productos/public/{id}` | Consultar producto por ID |
+| GET | /api/generos | Consultar géneros |
+| GET | /api/categorias | Consultar categorías |
+| GET | /api/productos/public | Consultar catálogo público |
+| GET | /api/productos/public/{id} | Consultar producto |
 
-Ejemplo de consulta:
+Las demás rutas, cuerpos y permisos deben consultarse en los controladores y DTO actuales del repositorio.
 
-```http
-GET http://localhost:8080/api/productos/public
-```
-
-Para rutas protegidas, iniciar sesión con una cuenta autorizada y enviar el JWT correspondiente en el encabezado:
+Para operaciones protegidas:
 
 ```http
 Authorization: Bearer TU_TOKEN
 ```
 
-Las rutas y cuerpos completos de administración, compra y POS deben consultarse en los controladores y DTO actuales del proyecto antes de integrarlos o probarlos.
+### Consultar el catálogo desde PowerShell
 
-## 11. Imágenes de productos
+```powershell
+Invoke-RestMethod `
+    -Uri "http://localhost:8080/api/productos/public" `
+    -Method Get -ErrorAction Stop
+```
 
-En desarrollo se utiliza:
+## Imágenes de productos
+
+Directorio de desarrollo:
 
 ```text
 uploads/productos/
 ```
 
-El proyecto admite cargas de hasta **10 MB** según la configuración multipart. Las imágenes locales están excluidas de Git mediante `.gitignore`.
+El límite multipart configurado es de hasta 10 MB.
 
-En producción se necesita un **almacenamiento persistente** configurado mediante `UPLOAD_DIR`, con una estrategia de respaldo y migración de las imágenes existentes. No confiar en un disco temporal del servicio de alojamiento.
-
-## 12. Problemas frecuentes y soluciones
-
-### Error de autenticación PostgreSQL
+En Azure se utiliza un directorio configurado mediante `UPLOAD_DIR`; en la instalación documentada:
 
 ```text
-FATAL: password authentication failed for user "postgres"
+/home/uploads/productos
 ```
 
-Verificar `DB_PASSWORD`, `DB_USERNAME`, permisos y que las variables estén definidas en la misma terminal del proceso.
+Verificar la persistencia del almacenamiento según la configuración de App Service y mantener una copia de respaldo de las imágenes.
 
-### Base de datos inexistente
+No incluir cargas privadas o datos de clientes en el repositorio.
+
+## Reportes
+
+La API proporciona información para analizar:
+
+- Ventas por período.
+- Ventas online y presenciales.
+- Detalle de ventas.
+- Productos.
+- Medios de pago.
+- Categorías.
+- Canales de venta.
+
+El frontend utiliza estos datos para presentar los reportes y generar los archivos PDF y Excel.
+
+## Pagos: alcance actual
+
+El sistema registra medios de pago.
+
+La confirmación de Yape requiere verificación manual en el flujo actual. Los pagos con tarjeta de demostración no representan una integración bancaria real.
+
+No recibir datos reales de tarjetas mediante un formulario de demostración.
+
+## Configuración en Azure
+
+1. Configurar el runtime compatible con Java 21.
+2. Establecer el perfil `prod`.
+3. Configurar DB_URL, DB_USERNAME y DB_PASSWORD.
+4. Configurar JWT_SECRET.
+5. Establecer CORS_ALLOWED_ORIGINS con el origen del frontend.
+6. Configurar UPLOAD_DIR y verificar su persistencia.
+7. Verificar que PostgreSQL tenga el esquema esperado.
+8. Ejecutar el despliegue y revisar sus registros.
+9. Comprobar catálogo, autenticación, imágenes, compras, POS y reportes.
+
+Para el dominio principal, el origen es:
 
 ```text
-database "TiendaSebas" does not exist
+https://www.sebascollection.com
 ```
 
-Crear o restaurar la base de datos y revisar `DB_URL`.
+Si también se utiliza el dominio sin `www`, configurar su redirección o autorizarlo cuando corresponda.
 
-### Puerto 8080 ocupado
+No incluir rutas ni una barra final en los valores de origen CORS.
 
-```powershell
-netstat -ano | findstr :8080
-```
+## Problemas frecuentes
 
-Identificar qué aplicación utiliza el puerto antes de cerrar procesos.
+### Error de conexión a PostgreSQL
 
-### JWT no configurado o inválido
+Revisar:
 
-Comprobar `JWT_SECRET`, el perfil activo y el formato del token. Cambiar la clave JWT invalida los tokens anteriores.
+- URL JDBC.
+- Usuario y contraseña.
+- Disponibilidad de la base de datos.
+- Requisitos de conexión y SSL indicados por Supabase.
+- Variables cargadas en el proceso.
 
-### CORS: Angular no puede conectarse
+### Fallo al validar el esquema
 
-Comprobar que el frontend de desarrollo use `http://localhost:4200` y que `app.cors.allowed-origins` tenga el origen correcto. En producción configurar `CORS_ALLOWED_ORIGINS` con la dirección real del frontend.
+Con `ddl-auto=validate`, las tablas deben existir y coincidir con las entidades.
 
-### Producción falla al validar tablas
+Aplicar las migraciones o restaurar un esquema compatible antes del arranque.
 
-`ddl-auto=validate` **no crea tablas**. Restaurar o migrar el esquema PostgreSQL compatible antes de arrancar el backend de producción. Revisar también los cambios SQL aplicados manualmente en la base local.
+### Error CORS
 
-## 13. Seguridad y recomendaciones
+Comprobar que CORS_ALLOWED_ORIGINS incluya el origen exacto del frontend y reiniciar el servicio después de modificar su configuración.
 
-- No subir contraseñas, secretos JWT, archivos `.env` ni respaldos privados.
-- Rotar las credenciales que hayan sido incluidas anteriormente en commits, incluso si después se quitaron.
-- Utilizar HTTPS y restringir CORS al frontend autorizado.
-- No usar cuentas administrativas compartidas ni contraseñas de ejemplo.
-- Hacer copias de seguridad de PostgreSQL y del almacenamiento de imágenes.
-- Validar permisos y roles antes de ejecutar operaciones administrativas.
-- **Importante para la puesta en producción:** la confirmación de Yape en el flujo actual no verifica automáticamente un pago real y los pagos con tarjeta de demostración no constituyen una pasarela real. Verificar manualmente los pagos antes de entregar pedidos y no aceptar datos reales de tarjeta mediante el flujo de demostración.
+### HTTP 401 o 403
 
-## 14. Preparación para producción
+Verificar token, vencimiento, estado de la cuenta y rol autorizado.
 
-1. Preparar PostgreSQL de producción y migrar datos y esquema.
-2. Rotar `DB_PASSWORD` y `JWT_SECRET` previamente expuestos.
-3. Configurar variables de entorno del servicio de alojamiento.
-4. Configurar almacenamiento persistente para `UPLOAD_DIR`.
-5. Activar el perfil `prod` y validar que las tablas coincidan con las entidades.
-6. Desplegar el backend y obtener su URL HTTPS definitiva.
-7. Configurar el frontend Angular con esa URL y actualizar `CORS_ALLOWED_ORIGINS`.
-8. Probar autenticación, catálogo, carrito, compras, POS, imágenes y reportes.
-9. Configurar copias de seguridad y supervisión de errores.
+### Error 503 en Azure
 
-## 15. Repositorio
+Revisar el estado de App Service, los registros de arranque, las variables y las cuotas del plan contratado.
 
-**Proyecto:** Tienda Sebas – Backend  
-**Repositorio:** https://github.com/Alexan-22/tienda-sebas-backend  
-**Arquitectura:** API REST monolítica por capas con Spring Boot y PostgreSQL.  
-**Frontend:** Angular, TypeScript y Tailwind CSS.
+### Imágenes no disponibles
+
+Revisar UPLOAD_DIR, persistencia, permisos y existencia de los archivos.
+
+## Trabajo realizado
+
+- Diseño y desarrollo de la API REST.
+- Implementación de autenticación y permisos.
+- Gestión del catálogo y stock por talla.
+- Integración de compras online y ventas presenciales.
+- Tratamiento monetario con BigDecimal.
+- Consultas para reportes por período y canal.
+- Migración de datos a PostgreSQL en Supabase.
+- Configuración del despliegue en Azure mediante GitHub Actions.
+- Integración con el frontend y el dominio público.
+
+## Mejoras pendientes
+
+- Integración con un proveedor de pagos.
+- Ampliación de pruebas automatizadas.
+- Automatización y documentación de cambios de esquema.
+- Mejora de supervisión y alertas.
+- Verificación periódica de restauración de respaldos.
+
+## Autor
+
+**Alexander Ancori Conza**
+
+GitHub: [Alexan-22](https://github.com/Alexan-22)
+
+Aplicación: [Sebas Collection](https://www.sebascollection.com/)
