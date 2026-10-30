@@ -10,9 +10,12 @@ import java.util.Optional;
 @Repository
 public interface HomeBannerRepository extends JpaRepository<HomeBanner, Integer> {
 
+    // Métodos requeridos por HomeService
+    List<HomeBanner> findByEstadoTrueOrderByOrdenAsc();
+    Optional<HomeBanner> findFirstByEstadoTrueOrderByOrdenAsc();
+    List<HomeBanner> findAllByOrderByOrdenAsc();
+
+    // Métodos Multi-tenant
     List<HomeBanner> findByEstadoTrueAndTiendaIdOrderByOrdenAsc(Long tiendaId);
-
     List<HomeBanner> findByTiendaIdOrderByOrdenAsc(Long tiendaId);
-
-    Optional<HomeBanner> findFirstByEstadoTrueAndTiendaIdOrderByOrdenAsc(Long tiendaId);
 }

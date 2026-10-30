@@ -28,10 +28,14 @@ public class CategoriaService {
     }
 
     public Categoria guardar(Categoria categoria) {
-        if (categoria == null || categoria.getNombre() == null || categoria.getNombre().isBlank()) {
+        // CAMBIA AQUÍ 'getNombreCategoria' o 'getNombre' según tu entidad real
+        if (categoria == null || categoria.getNombreCategoria() == null || categoria.getNombreCategoria().isBlank()) {
             throw new RuntimeException("El nombre de la categoría es obligatorio");
         }
-        categoria.setNombre(categoria.getNombre().trim());
+
+        // CAMBIA AQUÍ 'setNombreCategoria' o 'setNombre'
+        categoria.setNombreCategoria(categoria.getNombreCategoria().trim());
+
         if (categoria.getTiendaId() == null) {
             categoria.setTiendaId(TenantContext.getCurrentTenant());
         }
@@ -40,10 +44,15 @@ public class CategoriaService {
 
     public Categoria actualizar(Integer idCategoria, Categoria datos) {
         Categoria categoria = buscarPorId(idCategoria);
-        if (datos == null || datos.getNombre() == null || datos.getNombre().isBlank()) {
+
+        // CAMBIA AQUÍ 'getNombreCategoria' o 'getNombre'
+        if (datos == null || datos.getNombreCategoria() == null || datos.getNombreCategoria().isBlank()) {
             throw new RuntimeException("El nombre de la categoría es obligatorio");
         }
-        categoria.setNombre(datos.getNombre().trim());
+
+        // CAMBIA AQUÍ 'setNombreCategoria' o 'setNombre'
+        categoria.setNombreCategoria(datos.getNombreCategoria().trim());
+
         return categoriaRepository.save(categoria);
     }
 

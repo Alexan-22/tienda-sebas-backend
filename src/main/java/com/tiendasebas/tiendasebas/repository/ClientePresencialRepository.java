@@ -10,19 +10,12 @@ import java.util.Optional;
 @Repository
 public interface ClientePresencialRepository extends JpaRepository<ClientePresencial, Integer> {
 
-    Optional<ClientePresencial> findByTipoDocumentoIgnoreCaseAndNumeroDocumentoAndTiendaId(
-            String tipoDocumento,
-            String numeroDocumento,
-            Long tiendaId
-    );
+    // Métodos base requeridos por ClientePresencialService
+    List<ClientePresencial> findByEstadoTrueOrderByNombreAscApellidoAsc();
+    boolean existsByTipoDocumentoIgnoreCaseAndNumeroDocumento(String tipoDocumento, String numeroDocumento);
 
-    boolean existsByTipoDocumentoIgnoreCaseAndNumeroDocumentoAndTiendaId(
-            String tipoDocumento,
-            String numeroDocumento,
-            Long tiendaId
-    );
-
+    // Métodos Multi-tenant
+    Optional<ClientePresencial> findByTipoDocumentoIgnoreCaseAndNumeroDocumentoAndTiendaId(String tipoDocumento, String numeroDocumento, Long tiendaId);
     List<ClientePresencial> findByEstadoTrueAndTiendaIdOrderByNombreAscApellidoAsc(Long tiendaId);
-
     List<ClientePresencial> findByTiendaId(Long tiendaId);
 }

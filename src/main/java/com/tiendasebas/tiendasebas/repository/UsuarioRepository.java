@@ -10,9 +10,14 @@ import java.util.Optional;
 @Repository
 public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
 
+    // Método requerido por JwtAuthenticationFilter y AuthService
+    Optional<Usuario> findByCorreo(String correo);
+
+    // Método requerido por AuthService
+    boolean existsByCorreo(String correo);
+
+    // Métodos Multi-tenant
     Optional<Usuario> findByCorreoAndTiendaId(String correo, Long tiendaId);
-
     boolean existsByCorreoAndTiendaId(String correo, Long tiendaId);
-
     List<Usuario> findByTiendaId(Long tiendaId);
 }

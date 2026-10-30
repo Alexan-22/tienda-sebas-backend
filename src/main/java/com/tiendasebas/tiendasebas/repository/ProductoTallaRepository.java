@@ -14,32 +14,22 @@ import java.util.Optional;
 @Repository
 public interface ProductoTallaRepository extends JpaRepository<ProductoTalla, Integer> {
 
-    // Listar stock por producto garantizando tienda
-    List<ProductoTalla> findByProductoIdProductoAndProductoTiendaId(
-            Integer idProducto,
-            Long tiendaId
-    );
+    // Métodos base requeridos por ProductoTallaService
+    List<ProductoTalla> findByProductoIdProducto(Integer idProducto);
+    Optional<ProductoTalla> findByProductoIdProductoAndTallaIdTalla(Integer idProducto, Integer idTalla);
 
-    // Buscar producto + talla
-    Optional<ProductoTalla> findByProductoIdProductoAndTallaIdTallaAndProductoTiendaId(
-            Integer idProducto,
-            Integer idTalla,
-            Long tiendaId
-    );
-
-    // Admin - Inventario filtrado por tienda
     @Query("""
             SELECT pt
             FROM ProductoTalla pt
             JOIN FETCH pt.producto p
             JOIN FETCH pt.talla t
-            WHERE p.tiendaId = :tiendaId
             ORDER BY p.idProducto, t.idTalla
             """)
-    List<ProductoTalla> listarInventarioCompletoPorTienda(@Param("tiendaId") Long tiendaId);
+    List<ProductoTalla> listarInventarioCompleto();
 
-    // Compra - Bloquear stock con validación de tienda
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    // Métodos Multi-tenant (ya agregados previamente)
+    List<ProductoTalla> findByProductoIdProductoAndProductoTiendaId(Integer idProducto, Long tiendaId);
+
     @Query("""
             SELECT pt
             FROM ProductoTalla pt
@@ -48,8 +38,5 @@ public interface ProductoTallaRepository extends JpaRepository<ProductoTalla, In
             WHERE pt.idProductoTalla = :idProductoTalla
             AND p.tiendaId = :tiendaId
             """)
-    Optional<ProductoTalla> buscarPorIdParaCompra(
-            @Param("idProductoTalla") Integer idProductoTalla,
-            @Param("tiendaId") Long tiendaId
-    );
+    Optional<ProductoTalla> buscarPorIdParaCompra(@Param("idProductoTalla") Integer idProductoTalla, @Param("tiendaId") Long tiendaId);
 }

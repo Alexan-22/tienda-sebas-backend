@@ -9,7 +9,11 @@ import java.util.List;
 @Repository
 public interface HomeColeccionRepository extends JpaRepository<HomeColeccion, Integer> {
 
-    List<HomeColeccion> findByEstadoTrueAndTiendaIdOrderByOrdenAsc(Long tiendaId);
+    // Métodos requeridos por HomeService
+    List<HomeColeccion> findByEstadoTrueOrderByOrdenAsc();
+    List<HomeColeccion> findAllByOrderByOrdenAsc();
 
+    // Métodos Multi-tenant
+    List<HomeColeccion> findByEstadoTrueAndTiendaIdOrderByOrdenAsc(Long tiendaId);
     List<HomeColeccion> findByTiendaIdOrderByOrdenAsc(Long tiendaId);
 }
