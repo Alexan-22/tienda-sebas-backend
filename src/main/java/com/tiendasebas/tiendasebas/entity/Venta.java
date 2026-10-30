@@ -154,4 +154,8 @@ public class Venta {
      */
     @OneToMany(mappedBy = "venta", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DetalleVenta> detalles;
+
+    //Mapeo de tienda_id en Entidades Existentes
+    @Column(name = "tienda_id", nullable = false)
+    private Long tiendaId = 1L;
 }

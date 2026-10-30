@@ -2,47 +2,52 @@ package com.tiendasebas.tiendasebas.repository;
 
 import com.tiendasebas.tiendasebas.entity.Producto;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
-public interface ProductoRepository
-        extends JpaRepository<Producto, Integer> {
+@Repository
+public interface ProductoRepository extends JpaRepository<Producto, Integer> {
 
-    // Productos activos
-    List<Producto> findByEstadoTrue();
+    List<Producto> findByTiendaId(Long tiendaId);
+
+    Optional<Producto> findByIdProductoAndTiendaId(Integer idProducto, Long tiendaId);
+
+    // Productos activos por tienda
+    List<Producto> findByEstadoTrueAndTiendaId(Long tiendaId);
 
     // Por género
-    List<Producto> findByEstadoTrueAndGeneroIdGenero(
-            Integer idGenero
+    List<Producto> findByEstadoTrueAndGeneroIdGeneroAndTiendaId(
+            Integer idGenero,
+            Long tiendaId
     );
 
     // Por categoría
-    List<Producto> findByEstadoTrueAndCategoriaIdCategoria(
-            Integer idCategoria
+    List<Producto> findByEstadoTrueAndCategoriaIdCategoriaAndTiendaId(
+            Integer idCategoria,
+            Long tiendaId
     );
 
     // Género + categoría
-    List<Producto>
-    findByEstadoTrueAndGeneroIdGeneroAndCategoriaIdCategoria(
+    List<Producto> findByEstadoTrueAndGeneroIdGeneroAndCategoriaIdCategoriaAndTiendaId(
             Integer idGenero,
-            Integer idCategoria
+            Integer idCategoria,
+            Long tiendaId
     );
 
     // Buscador
-    List<Producto>
-    findByEstadoTrueAndNombreContainingIgnoreCase(
-            String nombre
+    List<Producto> findByEstadoTrueAndNombreContainingIgnoreCaseAndTiendaId(
+            String nombre,
+            Long tiendaId
     );
 
     // Productos destacados
-    List<Producto>
-    findByEstadoTrueAndDestacadoTrue();
+    List<Producto> findByEstadoTrueAndDestacadoTrueAndTiendaId(Long tiendaId);
 
     // Productos nuevos
-    List<Producto>
-    findByEstadoTrueAndNuevoTrue();
+    List<Producto> findByEstadoTrueAndNuevoTrueAndTiendaId(Long tiendaId);
 
     // Productos con oferta
-    List<Producto>
-    findByEstadoTrueAndPrecioOfertaIsNotNull();
+    List<Producto> findByEstadoTrueAndPrecioOfertaIsNotNullAndTiendaId(Long tiendaId);
 }

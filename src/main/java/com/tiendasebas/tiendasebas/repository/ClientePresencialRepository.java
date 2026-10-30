@@ -1,26 +1,28 @@
 package com.tiendasebas.tiendasebas.repository;
 
 import com.tiendasebas.tiendasebas.entity.ClientePresencial;
-
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
-public interface ClientePresencialRepository
-        extends JpaRepository<ClientePresencial, Integer> {
+@Repository
+public interface ClientePresencialRepository extends JpaRepository<ClientePresencial, Integer> {
 
-    Optional<ClientePresencial>
-    findByTipoDocumentoIgnoreCaseAndNumeroDocumento(
+    Optional<ClientePresencial> findByTipoDocumentoIgnoreCaseAndNumeroDocumentoAndTiendaId(
             String tipoDocumento,
-            String numeroDocumento
+            String numeroDocumento,
+            Long tiendaId
     );
 
-    boolean existsByTipoDocumentoIgnoreCaseAndNumeroDocumento(
+    boolean existsByTipoDocumentoIgnoreCaseAndNumeroDocumentoAndTiendaId(
             String tipoDocumento,
-            String numeroDocumento
+            String numeroDocumento,
+            Long tiendaId
     );
 
-    List<ClientePresencial>
-    findByEstadoTrueOrderByNombreAscApellidoAsc();
+    List<ClientePresencial> findByEstadoTrueAndTiendaIdOrderByNombreAscApellidoAsc(Long tiendaId);
+
+    List<ClientePresencial> findByTiendaId(Long tiendaId);
 }

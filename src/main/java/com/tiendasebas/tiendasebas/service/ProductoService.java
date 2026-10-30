@@ -1,5 +1,6 @@
 package com.tiendasebas.tiendasebas.service;
 
+import com.tiendasebas.config.tenant.TenantContext;
 import com.tiendasebas.tiendasebas.entity.Categoria;
 import com.tiendasebas.tiendasebas.entity.Genero;
 import com.tiendasebas.tiendasebas.entity.Producto;
@@ -7,6 +8,7 @@ import com.tiendasebas.tiendasebas.repository.CategoriaRepository;
 import com.tiendasebas.tiendasebas.repository.GeneroRepository;
 import com.tiendasebas.tiendasebas.repository.ProductoRepository;
 import org.springframework.stereotype.Service;
+
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -17,18 +19,22 @@ public class ProductoService {
     private final CategoriaRepository categoriaRepository;
     private final GeneroRepository generoRepository;
 
-    public ProductoService(ProductoRepository productoRepository, CategoriaRepository categoriaRepository, GeneroRepository generoRepository) {
+    public ProductoService(ProductoRepository productoRepository,
+                           CategoriaRepository categoriaRepository,
+                           GeneroRepository generoRepository) {
         this.productoRepository = productoRepository;
         this.categoriaRepository = categoriaRepository;
         this.generoRepository = generoRepository;
     }
 
     public List<Producto> listar() {
-        return productoRepository.findByEstadoTrue();
+        Long tiendaId = TenantContext.getCurrentTenant();
+        return productoRepository.findByEstadoTrueAndTiendaId(tiendaId);
     }
 
     public Producto buscar(Integer id) {
-        Producto producto = productoRepository.findById(id)
+        Long tiendaId = TenantContext.getCurrentTenant();
+        Producto producto = productoRepository.findByIdProductoAndTiendaId(id, tiendaId)
                 .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
 
         if (!Boolean.TRUE.equals(producto.getEstado())) {
@@ -39,48 +45,56 @@ public class ProductoService {
     }
 
     public List<Producto> listarPorGenero(Integer idGenero) {
-        return productoRepository.findByEstadoTrueAndGeneroIdGenero(idGenero);
+        Long tiendaId = TenantContext.getCurrentTenant();
+        return productoRepository.findByEstadoTrueAndGeneroIdGeneroAndTiendaId(idGenero, tiendaId);
     }
 
     public List<Producto> listarPorCategoria(Integer idCategoria) {
-        return productoRepository.findByEstadoTrueAndCategoriaIdCategoria(idCategoria);
+        Long tiendaId = TenantContext.getCurrentTenant();
+        return productoRepository.findByEstadoTrueAndCategoriaIdCategoriaAndTiendaId(idCategoria, tiendaId);
     }
 
     public List<Producto> filtrar(Integer idGenero, Integer idCategoria) {
-        return productoRepository.findByEstadoTrueAndGeneroIdGeneroAndCategoriaIdCategoria(idGenero, idCategoria);
+        Long tiendaId = TenantContext.getCurrentTenant();
+        return productoRepository.findByEstadoTrueAndGeneroIdGeneroAndCategoriaIdCategoriaAndTiendaId(idGenero, idCategoria, tiendaId);
     }
 
     public List<Producto> buscarPorNombre(String texto) {
         if (texto == null || texto.isBlank()) {
             return listar();
         }
-
-        return productoRepository.findByEstadoTrueAndNombreContainingIgnoreCase(texto.trim());
+        Long tiendaId = TenantContext.getCurrentTenant();
+        return productoRepository.findByEstadoTrueAndNombreContainingIgnoreCaseAndTiendaId(texto.trim(), tiendaId);
     }
 
     public List<Producto> listarDestacados() {
-        return productoRepository.findByEstadoTrueAndDestacadoTrue();
+        Long tiendaId = TenantContext.getCurrentTenant();
+        return productoRepository.findByEstadoTrueAndDestacadoTrueAndTiendaId(tiendaId);
     }
 
     public List<Producto> listarNuevos() {
-        return productoRepository.findByEstadoTrueAndNuevoTrue();
+        Long tiendaId = TenantContext.getCurrentTenant();
+        return productoRepository.findByEstadoTrueAndNuevoTrueAndTiendaId(tiendaId);
     }
 
     public List<Producto> listarOfertas() {
-        return productoRepository.findByEstadoTrueAndPrecioOfertaIsNotNull();
+        Long tiendaId = TenantContext.getCurrentTenant();
+        return productoRepository.findByEstadoTrueAndPrecioOfertaIsNotNullAndTiendaId(tiendaId);
     }
 
     public Producto guardar(Producto producto, Integer idGenero, Integer idCategoria) {
         validarProducto(producto);
+        Long tiendaId = TenantContext.getCurrentTenant();
 
         Genero genero = generoRepository.findById(idGenero)
                 .orElseThrow(() -> new RuntimeException("Género no encontrado"));
 
-        Categoria categoria = categoriaRepository.findById(idCategoria)
+        Categoria categoria = categoriaRepository.findByIdCategoriaAndTiendaId(idCategoria, tiendaId)
                 .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
 
         normalizarProducto(producto);
 
+        producto.setTiendaId(tiendaId);
         producto.setGenero(genero);
         producto.setCategoria(categoria);
         producto.setEstado(true);
@@ -91,7 +105,8 @@ public class ProductoService {
     }
 
     public Producto actualizar(Integer id, Producto datos, Integer idGenero, Integer idCategoria) {
-        Producto producto = productoRepository.findById(id)
+        Long tiendaId = TenantContext.getCurrentTenant();
+        Producto producto = productoRepository.findByIdProductoAndTiendaId(id, tiendaId)
                 .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
 
         validarProducto(datos);
@@ -99,7 +114,7 @@ public class ProductoService {
         Genero genero = generoRepository.findById(idGenero)
                 .orElseThrow(() -> new RuntimeException("Género no encontrado"));
 
-        Categoria categoria = categoriaRepository.findById(idCategoria)
+        Categoria categoria = categoriaRepository.findByIdCategoriaAndTiendaId(idCategoria, tiendaId)
                 .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
 
         normalizarProducto(datos);
@@ -118,7 +133,8 @@ public class ProductoService {
     }
 
     public void eliminar(Integer id) {
-        Producto producto = productoRepository.findById(id)
+        Long tiendaId = TenantContext.getCurrentTenant();
+        Producto producto = productoRepository.findByIdProductoAndTiendaId(id, tiendaId)
                 .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
 
         producto.setEstado(false);

@@ -53,4 +53,8 @@ public class Producto {
     // Eliminación lógica
     @Column(nullable = false)
     private Boolean estado = true;
+
+    //Mapeo de tienda_id en Entidades Existentes
+    @Column(name = "tienda_id", nullable = false)
+    private Long tiendaId = 1L;
 }

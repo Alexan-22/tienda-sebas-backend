@@ -2,13 +2,14 @@ package com.tiendasebas.tiendasebas.repository;
 
 import com.tiendasebas.tiendasebas.entity.HomeColeccion;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
-public interface HomeColeccionRepository
-        extends JpaRepository<HomeColeccion, Integer> {
+@Repository
+public interface HomeColeccionRepository extends JpaRepository<HomeColeccion, Integer> {
 
-    List<HomeColeccion> findByEstadoTrueOrderByOrdenAsc();
+    List<HomeColeccion> findByEstadoTrueAndTiendaIdOrderByOrdenAsc(Long tiendaId);
 
-    List<HomeColeccion> findAllByOrderByOrdenAsc();
+    List<HomeColeccion> findByTiendaIdOrderByOrdenAsc(Long tiendaId);
 }
