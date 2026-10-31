@@ -1,6 +1,6 @@
 package com.tiendasebas.tiendasebas.service;
 
-import com.tiendasebas.config.tenant.TenantContext;
+import com.tiendasebas.tiendasebas.config.TenantContext;
 import com.tiendasebas.tiendasebas.dto.*;
 import com.tiendasebas.tiendasebas.entity.ClientePresencial;
 import com.tiendasebas.tiendasebas.entity.DetalleVenta;

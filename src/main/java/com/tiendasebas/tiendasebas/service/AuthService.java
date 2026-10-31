@@ -1,5 +1,6 @@
 package com.tiendasebas.tiendasebas.service;
 
+import com.tiendasebas.tiendasebas.config.TenantContext;
 import com.tiendasebas.tiendasebas.dto.LoginRequest;
 import com.tiendasebas.tiendasebas.dto.LoginResponse;
 import com.tiendasebas.tiendasebas.dto.RegistroRequest;
@@ -34,7 +35,7 @@ public class AuthService {
         String apellido = request.getApellido().trim();
         String correo = request.getCorreo().trim().toLowerCase();
 
-        if (usuarioRepository.existsByCorreo(correo)) {
+        if (usuarioRepository.existsByCorreoAndTiendaId(correo, TenantContext.getCurrentTenant())) {
             throw new RuntimeException("El correo ya está registrado");
         }
 
@@ -47,6 +48,7 @@ public class AuthService {
         usuario.setCorreo(correo);
         usuario.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         usuario.setRol(rolCliente);
+        usuario.setTiendaId(TenantContext.getCurrentTenant());
         usuario.setEstado(true);
 
         usuarioRepository.save(usuario);
@@ -59,7 +61,7 @@ public class AuthService {
     public LoginResponse login(LoginRequest request) {
         String correo = request.getCorreo().trim().toLowerCase();
 
-        Usuario usuario = usuarioRepository.findByCorreo(correo)
+        Usuario usuario = usuarioRepository.findByCorreoAndTiendaId(correo, TenantContext.getCurrentTenant())
                 .orElseThrow(() -> new RuntimeException("Correo o contraseña incorrectos"));
 
         if (!Boolean.TRUE.equals(usuario.getEstado())) {
@@ -71,7 +73,7 @@ public class AuthService {
         }
 
         String rol = usuario.getRol().getNombreRol();
-        String token = jwtService.generateToken(usuario.getCorreo(), rol);
+        String token = jwtService.generateToken(usuario.getIdUsuario(), usuario.getCorreo(), rol, usuario.getTiendaId());
 
         return new LoginResponse(token, usuario.getNombre(), usuario.getCorreo(), rol);
     }

@@ -35,6 +35,18 @@ public class HomeBanner {
     @Column(name = "estado", nullable = false)
     private Boolean estado = true;
 
+    // Identificador de la tienda SaaS
+    @Column(name = "tienda_id")
+    private Long tiendaId;
+
+    public Long getTiendaId() {
+        return tiendaId;
+    }
+
+    public void setTiendaId(Long tiendaId) {
+        this.tiendaId = tiendaId;
+    }
+
     public HomeBanner() {}
 
     public Integer getIdBanner() { return idBanner; }

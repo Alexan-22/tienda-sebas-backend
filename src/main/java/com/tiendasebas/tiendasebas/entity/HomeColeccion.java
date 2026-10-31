@@ -6,6 +6,18 @@ import jakarta.persistence.*;
 @Table(name = "home_colecciones")
 public class HomeColeccion {
 
+    @jakarta.persistence.Column(name = "tienda_id")
+    private Long tiendaId;
+
+    public Long getTiendaId() {
+        return tiendaId;
+    }
+
+    public void setTiendaId(Long tiendaId) {
+        this.tiendaId = tiendaId;
+    }
+
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_coleccion")

@@ -1,19 +1,17 @@
-package com.tiendasebas.config.tenant;
+package com.tiendasebas.tiendasebas.config;
 
-public class TenantContext {
-
-    private static final ThreadLocal<Long> CURRENT_TENANT = new ThreadLocal<>();
-
-    public static void setCurrentTenant(Long tenantId) {
-        CURRENT_TENANT.set(tenantId);
+/** El tenant se establece exclusivamente en JwtAuthenticationFilter. */
+public final class TenantContext {
+    private static final ThreadLocal<Long> CURRENT = new ThreadLocal<>();
+    private TenantContext() {}
+    public static void setCurrentTenant(Long id) {
+        if (id == null) throw new IllegalArgumentException("Tenant obligatorio");
+        CURRENT.set(id);
     }
-
     public static Long getCurrentTenant() {
-        Long tenantId = CURRENT_TENANT.get();
-        return (tenantId != null) ? tenantId : 1L; // Fallback predeterminado: Sebas Collection (1)
+        Long id = CURRENT.get();
+        if (id == null) throw new IllegalStateException("Tenant no resuelto");
+        return id;
     }
-
-    public static void clear() {
-        CURRENT_TENANT.remove();
-    }
+    public static void clear() { CURRENT.remove(); }
 }

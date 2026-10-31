@@ -1,4 +1,4 @@
-package com.tiendasebas.entity;
+package com.tiendasebas.tiendasebas.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -25,12 +25,6 @@ public class Tienda {
 
     @Column(name = "logo_url", columnDefinition = "TEXT")
     private String logoUrl;
-
-    @Column(length = 11)
-    private String ruc;
-
-    @Column(name = "telefono_soporte", length = 20)
-    private String telefonoSoporte;
 
     @Column(name = "creado_en", insertable = false, updatable = false)
     private OffsetDateTime creadoEn;

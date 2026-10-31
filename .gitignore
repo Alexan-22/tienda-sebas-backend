@@ -1,25 +1,30 @@
-HELP.md
+
+# ==========================================
+# SEBAS COLLECTION SAAS - GITIGNORE
+# ==========================================
+
+# Maven y compilacion
 target/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
 
-### STS ###
+# Spring Tool Suite
 .apt_generated
 .classpath
 .factorypath
 .project
-.settings
+.settings/
 .springBeans
-.sts4-cache
+.sts4-cache/
 
-### IntelliJ IDEA ###
-.idea
+# IntelliJ IDEA
+.idea/
 *.iws
 *.iml
 *.ipr
 
-### NetBeans ###
+# NetBeans
 /nbproject/private/
 /nbbuild/
 /dist/
@@ -29,14 +34,24 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
-### VS Code ###
+# Visual Studio Code
 .vscode/
-# Respaldos y secretos locales
-*.backup-local
-*.local.properties
+
+# Credenciales y archivos privados
 .env
 .env.*
 !.env.example
+*.backup-local
+*.local.properties
 
-# Imágenes almacenadas localmente
-/uploads/productos/
+# Archivos generados
+*.log
+logs/
+
+# Imagenes y archivos locales
+/uploads/
+
+# Archivos temporales
+*.tmp
+*.temp
+*.bak

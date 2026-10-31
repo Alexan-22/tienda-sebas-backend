@@ -1,6 +1,6 @@
-package com.tiendasebas.repository;
+package com.tiendasebas.tiendasebas.repository;
 
-import com.tiendasebas.entity.Tienda;
+import com.tiendasebas.tiendasebas.entity.Tienda;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
