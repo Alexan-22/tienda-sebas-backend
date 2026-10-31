@@ -36,6 +36,6 @@ public class Usuario {
     private Boolean estado = true;
 
     //Mapeo de tienda_id en Entidades Existentes
-    @Column(name = "tienda_id", nullable = false)
-    private Long tiendaId = 1L;
+    @Column(name = "tienda_id")
+    private Long tiendaId;
 }
