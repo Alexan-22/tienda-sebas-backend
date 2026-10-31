@@ -21,4 +21,5 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
     boolean existsByCorreoAndTiendaId(String correo, Long tiendaId);
     List<Usuario> findByTiendaId(Long tiendaId);
     Optional<Usuario> findByIdUsuarioAndTiendaId(Integer idUsuario, Long tiendaId);
+    Optional<Usuario> findByCorreoAndTiendaIdIsNull(String correo);
 }
