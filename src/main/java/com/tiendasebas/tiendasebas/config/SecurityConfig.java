@@ -1,3 +1,4 @@
+
 package com.tiendasebas.tiendasebas.config;
 
 import com.tiendasebas.tiendasebas.security.JwtAuthenticationFilter;
@@ -19,6 +20,12 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.Arrays;
 import java.util.List;
 
+// ============================================
+// SEBAS COLLECTION SAAS V2
+// CONFIGURACION CENTRAL DE SEGURIDAD
+// CORRECCION: SIN BEAN JWT DUPLICADO
+// ============================================
+
 @Configuration
 public class SecurityConfig {
 
@@ -27,14 +34,28 @@ public class SecurityConfig {
     @Value("${app.cors.allowed-origins}")
     private String origins;
 
-    public SecurityConfig(JwtAuthenticationFilter jwt) {
+    // ========================================
+    // CONSTRUCTOR
+    // ========================================
+
+    public SecurityConfig(
+            JwtAuthenticationFilter jwt
+    ) {
         this.jwt = jwt;
     }
+
+    // ========================================
+    // PASSWORD ENCODER
+    // ========================================
 
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
+    // ========================================
+    // SECURITY FILTER CHAIN
+    // ========================================
 
     @Bean
     public SecurityFilterChain securityFilterChain(
@@ -43,22 +64,30 @@ public class SecurityConfig {
 
         http
                 .csrf(csrf -> csrf.disable())
+
                 .cors(cors ->
-                        cors.configurationSource(corsConfigurationSource())
+                        cors.configurationSource(
+                                corsConfigurationSource()
+                        )
                 )
+
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(
                                 SessionCreationPolicy.STATELESS
                         )
                 )
+
                 .authorizeHttpRequests(auth -> auth
 
-                        // Preflight de CORS
+                        // CORS
+
                         .requestMatchers(
-                                HttpMethod.OPTIONS, "/**"
+                                HttpMethod.OPTIONS,
+                                "/**"
                         ).permitAll()
 
-                        // Autenticación normal y global
+                        // LOGIN NORMAL Y GLOBAL
+
                         .requestMatchers(
                                 HttpMethod.POST,
                                 "/api/auth/registro",
@@ -66,12 +95,15 @@ public class SecurityConfig {
                                 "/api/auth/superadmin/login"
                         ).permitAll()
 
-                        // Administración global exclusiva
+                        // SUPERADMIN GLOBAL
+
                         .requestMatchers(
+                                "/api/superadmin",
                                 "/api/superadmin/**"
                         ).hasRole("SUPER_ADMIN")
 
-                        // Endpoints públicos existentes
+                        // ENDPOINTS PUBLICOS
+
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/v1/tiendas/config",
@@ -86,7 +118,8 @@ public class SecurityConfig {
                                 "/uploads/**"
                         ).permitAll()
 
-                        // Administración de cada tienda
+                        // ADMINISTRACION POR TIENDA
+
                         .requestMatchers(
                                 "/api/productos/admin/**",
                                 "/api/producto-imagenes/admin/**",
@@ -98,24 +131,35 @@ public class SecurityConfig {
                                 "/api/home/admin/**"
                         ).hasRole("ADMIN")
 
+                        // CREAR CATEGORIAS
+
                         .requestMatchers(
                                 HttpMethod.POST,
                                 "/api/categorias"
                         ).hasRole("ADMIN")
+
+                        // EDITAR CATEGORIAS
 
                         .requestMatchers(
                                 HttpMethod.PUT,
                                 "/api/categorias/**"
                         ).hasRole("ADMIN")
 
+                        // ELIMINAR CATEGORIAS
+
                         .requestMatchers(
                                 HttpMethod.DELETE,
                                 "/api/categorias/**"
                         ).hasRole("ADMIN")
 
-                        // Conservar la política para el resto
+                        // RESTO DE ENDPOINTS
+
                         .anyRequest().authenticated()
                 )
+
+                // JWT REGISTRADO SOLO DENTRO
+                // DE LA CADENA DE SPRING SECURITY
+
                 .addFilterBefore(
                         jwt,
                         UsernamePasswordAuthenticationFilter.class
@@ -124,10 +168,15 @@ public class SecurityConfig {
         return http.build();
     }
 
+    // ========================================
+    // CONFIGURACION CORS
+    // ========================================
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
 
-        CorsConfiguration config = new CorsConfiguration();
+        CorsConfiguration config =
+                new CorsConfiguration();
 
         config.setAllowedOrigins(
                 Arrays.stream(origins.split(","))
@@ -137,11 +186,21 @@ public class SecurityConfig {
         );
 
         config.setAllowedMethods(
-                List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                List.of(
+                        "GET",
+                        "POST",
+                        "PUT",
+                        "DELETE",
+                        "OPTIONS"
+                )
         );
 
         config.setAllowedHeaders(
-                List.of("Authorization", "Content-Type", "Accept")
+                List.of(
+                        "Authorization",
+                        "Content-Type",
+                        "Accept"
+                )
         );
 
         config.setAllowCredentials(true);
@@ -149,8 +208,12 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();
 
-        source.registerCorsConfiguration("/**", config);
+        source.registerCorsConfiguration(
+                "/**",
+                config
+        );
 
         return source;
     }
 }
+
