@@ -1,6 +1,6 @@
-
 package com.tiendasebas.tiendasebas.controller;
 
+import com.tiendasebas.tiendasebas.service.SaasActividadService;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -31,11 +31,14 @@ import java.util.Locale;
 public class SuperAdminPropietarioCuentaController {
 
     private final JdbcTemplate jdbc;
+    private final SaasActividadService actividad;
 
     public SuperAdminPropietarioCuentaController(
-            JdbcTemplate jdbc
+            JdbcTemplate jdbc,
+            SaasActividadService actividad
     ) {
         this.jdbc = jdbc;
+        this.actividad = actividad;
     }
 
     // ==================================================
@@ -178,6 +181,8 @@ public class SuperAdminPropietarioCuentaController {
                 );
             }
 
+            actividad.registrar("ACTUALIZAR", "PROPIETARIO", actual.usuarioId(),
+                    "Se actualizaron los datos de un propietario");
             return consultarCuenta(tiendaId, false);
 
         } catch (DataIntegrityViolationException ex) {
@@ -241,6 +246,9 @@ public class SuperAdminPropietarioCuentaController {
             );
         }
 
+        actividad.registrar(request.activo() ? "ACTIVAR" : "DESACTIVAR",
+                "PROPIETARIO", actual.usuarioId(),
+                "Se modificó el acceso de un propietario");
         return consultarCuenta(tiendaId, false);
     }
 
@@ -373,4 +381,3 @@ public class SuperAdminPropietarioCuentaController {
         return correo;
     }
 }
-

@@ -1,211 +1,268 @@
+
 package com.tiendasebas.tiendasebas.service;
 
+import com.tiendasebas.tiendasebas.config.TenantContext;
 import com.tiendasebas.tiendasebas.entity.HomeBanner;
 import com.tiendasebas.tiendasebas.entity.HomeColeccion;
 import com.tiendasebas.tiendasebas.repository.HomeBannerRepository;
 import com.tiendasebas.tiendasebas.repository.HomeColeccionRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class HomeService {
 
-    private final HomeBannerRepository homeBannerRepository;
-    private final HomeColeccionRepository homeColeccionRepository;
+    private final HomeBannerRepository banners;
+    private final HomeColeccionRepository colecciones;
 
-    public HomeService(HomeBannerRepository homeBannerRepository, HomeColeccionRepository homeColeccionRepository) {
-        this.homeBannerRepository = homeBannerRepository;
-        this.homeColeccionRepository = homeColeccionRepository;
+    public HomeService(
+            HomeBannerRepository banners,
+            HomeColeccionRepository colecciones
+    ) {
+        this.banners = banners;
+        this.colecciones = colecciones;
     }
 
-    // =========================================================
-    // BANNERS PÚBLICOS
-    // =========================================================
+    private Long tiendaActual() {
+        Long tiendaId = TenantContext.getCurrentTenant();
+
+        if (tiendaId == null || tiendaId <= 0) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Tienda no identificada"
+            );
+        }
+
+        return tiendaId;
+    }
+
+    private ResponseStatusException noEncontrado(String recurso) {
+        return new ResponseStatusException(
+                HttpStatus.NOT_FOUND,
+                recurso + " no encontrado"
+        );
+    }
+
+    private void validarDatos(Object datos) {
+        if (datos == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Los datos son obligatorios"
+            );
+        }
+    }
+
+    private String validarTitulo(String titulo) {
+        if (titulo == null || titulo.isBlank()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "El titulo es obligatorio"
+            );
+        }
+
+        return titulo.trim();
+    }
+
+    private Integer normalizarOrden(Integer orden) {
+        return orden == null || orden < 1 ? 1 : orden;
+    }
+
+    private Boolean normalizarEstado(Boolean estado) {
+        return estado == null ? true : estado;
+    }
+
+    // BANNERS PUBLICOS
+
+    @Transactional(readOnly = true)
     public List<HomeBanner> listarBannersPublicos() {
-        return homeBannerRepository.findByEstadoTrueOrderByOrdenAsc();
+        return banners.findByEstadoTrueAndTiendaIdOrderByOrdenAsc(
+                tiendaActual()
+        );
     }
 
-    // =========================================================
-    // BANNER PÚBLICO ANTIGUO
-    // Compatibilidad temporal
-    // =========================================================
+    @Transactional(readOnly = true)
     public HomeBanner obtenerBannerPublico() {
-        return homeBannerRepository.findFirstByEstadoTrueOrderByOrdenAsc().orElse(null);
+        return listarBannersPublicos()
+                .stream()
+                .findFirst()
+                .orElse(null);
     }
 
-    // =========================================================
-    // BANNERS ADMIN
-    // =========================================================
+    // BANNERS ADMINISTRATIVOS
+
+    @Transactional(readOnly = true)
     public List<HomeBanner> listarBannersAdmin() {
-        return homeBannerRepository.findAllByOrderByOrdenAsc();
+        return banners.findByTiendaIdOrderByOrdenAsc(
+                tiendaActual()
+        );
     }
 
-    // =========================================================
-    // BANNER ADMIN ANTIGUO
-    // Compatibilidad temporal
-    // =========================================================
+    @Transactional(readOnly = true)
     public HomeBanner obtenerBannerAdmin() {
-        return homeBannerRepository.findAllByOrderByOrdenAsc().stream().findFirst()
-                .orElseThrow(() -> new RuntimeException("No existe ningún banner"));
+        return listarBannersAdmin()
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> noEncontrado("Banner"));
     }
 
-    // =========================================================
-    // BUSCAR BANNER
-    // =========================================================
+    @Transactional(readOnly = true)
     public HomeBanner buscarBanner(Integer idBanner) {
-        return homeBannerRepository.findById(idBanner)
-                .orElseThrow(() -> new RuntimeException("Banner no encontrado"));
-    }
+        Long tiendaId = tiendaActual();
 
-    // =========================================================
-    // CREAR BANNER
-    // =========================================================
-    public HomeBanner crearBanner(HomeBanner datos) {
-        HomeBanner banner = new HomeBanner();
-        banner.setEtiqueta(datos.getEtiqueta());
-        banner.setTitulo(datos.getTitulo());
-        banner.setDescripcion(datos.getDescripcion());
-        banner.setTextoBoton(datos.getTextoBoton());
-        banner.setEnlaceBoton(datos.getEnlaceBoton());
-        banner.setOrden(normalizarOrden(datos.getOrden()));
-        banner.setEstado(normalizarEstado(datos.getEstado()));
+        HomeBanner banner = banners.findById(idBanner)
+                .orElseThrow(() -> noEncontrado("Banner"));
 
-        /*
-         * La imagen se carga posteriormente
-         * mediante el endpoint multipart.
-         */
-        banner.setImagen(null);
-        return homeBannerRepository.save(banner);
-    }
+        if (!Objects.equals(banner.getTiendaId(), tiendaId)) {
+            throw noEncontrado("Banner");
+        }
 
-    // =========================================================
-    // ACTUALIZAR BANNER
-    // =========================================================
-    public HomeBanner actualizarBanner(Integer idBanner, HomeBanner datos) {
-        HomeBanner banner = buscarBanner(idBanner);
-        banner.setEtiqueta(datos.getEtiqueta());
-        banner.setTitulo(datos.getTitulo());
-        banner.setDescripcion(datos.getDescripcion());
-        banner.setTextoBoton(datos.getTextoBoton());
-        banner.setEnlaceBoton(datos.getEnlaceBoton());
-        banner.setOrden(normalizarOrden(datos.getOrden()));
-        banner.setEstado(normalizarEstado(datos.getEstado()));
-
-        /*
-         * No modificamos imagen aquí.
-         */
-        return homeBannerRepository.save(banner);
-    }
-
-    // =========================================================
-    // ACTUALIZAR IMAGEN BANNER
-    // =========================================================
-    public HomeBanner actualizarImagenBanner(Integer idBanner, String nombreImagen) {
-        HomeBanner banner = buscarBanner(idBanner);
-        banner.setImagen(nombreImagen);
-        return homeBannerRepository.save(banner);
-    }
-
-    // =========================================================
-    // ELIMINAR BANNER
-    // =========================================================
-    public HomeBanner eliminarBanner(Integer idBanner) {
-        HomeBanner banner = buscarBanner(idBanner);
-        homeBannerRepository.delete(banner);
         return banner;
     }
 
-    // =========================================================
-    // COLECCIONES PÚBLICAS
-    // =========================================================
+    @Transactional
+    public HomeBanner crearBanner(HomeBanner datos) {
+        validarDatos(datos);
+
+        HomeBanner banner = new HomeBanner();
+
+        banner.setTiendaId(tiendaActual());
+        banner.setTitulo(validarTitulo(datos.getTitulo()));
+        banner.setEtiqueta(datos.getEtiqueta());
+        banner.setDescripcion(datos.getDescripcion());
+        banner.setTextoBoton(datos.getTextoBoton());
+        banner.setEnlaceBoton(datos.getEnlaceBoton());
+        banner.setOrden(normalizarOrden(datos.getOrden()));
+        banner.setEstado(normalizarEstado(datos.getEstado()));
+        banner.setImagen(null);
+
+        return banners.save(banner);
+    }
+
+    @Transactional
+    public HomeBanner actualizarBanner(
+            Integer idBanner,
+            HomeBanner datos
+    ) {
+        validarDatos(datos);
+
+        HomeBanner banner = buscarBanner(idBanner);
+
+        banner.setTitulo(validarTitulo(datos.getTitulo()));
+        banner.setEtiqueta(datos.getEtiqueta());
+        banner.setDescripcion(datos.getDescripcion());
+        banner.setTextoBoton(datos.getTextoBoton());
+        banner.setEnlaceBoton(datos.getEnlaceBoton());
+        banner.setOrden(normalizarOrden(datos.getOrden()));
+        banner.setEstado(normalizarEstado(datos.getEstado()));
+
+        return banners.save(banner);
+    }
+
+    @Transactional
+    public HomeBanner actualizarImagenBanner(
+            Integer idBanner,
+            String nombreImagen
+    ) {
+        HomeBanner banner = buscarBanner(idBanner);
+        banner.setImagen(nombreImagen);
+        return banners.save(banner);
+    }
+
+    @Transactional
+    public HomeBanner eliminarBanner(Integer idBanner) {
+        HomeBanner banner = buscarBanner(idBanner);
+        banners.delete(banner);
+        return banner;
+    }
+
+    // COLECCIONES PUBLICAS
+
+    @Transactional(readOnly = true)
     public List<HomeColeccion> listarColeccionesPublicas() {
-        return homeColeccionRepository.findByEstadoTrueOrderByOrdenAsc();
+        return colecciones.findByEstadoTrueAndTiendaIdOrderByOrdenAsc(
+                tiendaActual()
+        );
     }
 
-    // =========================================================
-    // COLECCIONES ADMIN
-    // =========================================================
+    // COLECCIONES ADMINISTRATIVAS
+
+    @Transactional(readOnly = true)
     public List<HomeColeccion> listarColeccionesAdmin() {
-        return homeColeccionRepository.findAllByOrderByOrdenAsc();
+        return colecciones.findByTiendaIdOrderByOrdenAsc(
+                tiendaActual()
+        );
     }
 
-    // =========================================================
-    // BUSCAR COLECCIÓN
-    // =========================================================
+    @Transactional(readOnly = true)
     public HomeColeccion buscarColeccion(Integer idColeccion) {
-        return homeColeccionRepository.findById(idColeccion)
-                .orElseThrow(() -> new RuntimeException("Colección no encontrada"));
-    }
+        Long tiendaId = tiendaActual();
 
-    // =========================================================
-    // CREAR COLECCIÓN
-    // =========================================================
-    public HomeColeccion crearColeccion(HomeColeccion datos) {
-        HomeColeccion coleccion = new HomeColeccion();
-        coleccion.setTitulo(datos.getTitulo());
-        coleccion.setEtiqueta(datos.getEtiqueta());
-        coleccion.setTextoBoton(datos.getTextoBoton());
-        coleccion.setEnlace(datos.getEnlace());
-        coleccion.setOrden(normalizarOrden(datos.getOrden()));
-        coleccion.setEstado(normalizarEstado(datos.getEstado()));
+        HomeColeccion coleccion = colecciones.findById(idColeccion)
+                .orElseThrow(() -> noEncontrado("Coleccion"));
 
-        /*
-         * La imagen se sube después.
-         */
-        coleccion.setImagen(null);
-        return homeColeccionRepository.save(coleccion);
-    }
+        if (!Objects.equals(coleccion.getTiendaId(), tiendaId)) {
+            throw noEncontrado("Coleccion");
+        }
 
-    // =========================================================
-    // ACTUALIZAR COLECCIÓN
-    // =========================================================
-    public HomeColeccion actualizarColeccion(Integer idColeccion, HomeColeccion datos) {
-        HomeColeccion coleccion = buscarColeccion(idColeccion);
-        coleccion.setTitulo(datos.getTitulo());
-        coleccion.setEtiqueta(datos.getEtiqueta());
-        coleccion.setTextoBoton(datos.getTextoBoton());
-        coleccion.setEnlace(datos.getEnlace());
-        coleccion.setOrden(normalizarOrden(datos.getOrden()));
-        coleccion.setEstado(normalizarEstado(datos.getEstado()));
-
-        /*
-         * Conservamos la imagen.
-         */
-        return homeColeccionRepository.save(coleccion);
-    }
-
-    // =========================================================
-    // ACTUALIZAR IMAGEN COLECCIÓN
-    // =========================================================
-    public HomeColeccion actualizarImagenColeccion(Integer idColeccion, String nombreImagen) {
-        HomeColeccion coleccion = buscarColeccion(idColeccion);
-        coleccion.setImagen(nombreImagen);
-        return homeColeccionRepository.save(coleccion);
-    }
-
-    // =========================================================
-    // ELIMINAR COLECCIÓN
-    // =========================================================
-    public HomeColeccion eliminarColeccion(Integer idColeccion) {
-        HomeColeccion coleccion = buscarColeccion(idColeccion);
-        homeColeccionRepository.delete(coleccion);
         return coleccion;
     }
 
-    // =========================================================
-    // NORMALIZAR ORDEN
-    // =========================================================
-    private Integer normalizarOrden(Integer orden) {
-        if (orden == null || orden < 1) {
-            return 1;
-        }
-        return orden;
+    @Transactional
+    public HomeColeccion crearColeccion(HomeColeccion datos) {
+        validarDatos(datos);
+
+        HomeColeccion coleccion = new HomeColeccion();
+
+        coleccion.setTiendaId(tiendaActual());
+        coleccion.setTitulo(validarTitulo(datos.getTitulo()));
+        coleccion.setEtiqueta(datos.getEtiqueta());
+        coleccion.setTextoBoton(datos.getTextoBoton());
+        coleccion.setEnlace(datos.getEnlace());
+        coleccion.setOrden(normalizarOrden(datos.getOrden()));
+        coleccion.setEstado(normalizarEstado(datos.getEstado()));
+        coleccion.setImagen(null);
+
+        return colecciones.save(coleccion);
     }
 
-    // =========================================================
-    // NORMALIZAR ESTADO
-    // =========================================================
-    private Boolean normalizarEstado(Boolean estado) {
-        return estado != null ? estado : true;
+    @Transactional
+    public HomeColeccion actualizarColeccion(
+            Integer idColeccion,
+            HomeColeccion datos
+    ) {
+        validarDatos(datos);
+
+        HomeColeccion coleccion = buscarColeccion(idColeccion);
+
+        coleccion.setTitulo(validarTitulo(datos.getTitulo()));
+        coleccion.setEtiqueta(datos.getEtiqueta());
+        coleccion.setTextoBoton(datos.getTextoBoton());
+        coleccion.setEnlace(datos.getEnlace());
+        coleccion.setOrden(normalizarOrden(datos.getOrden()));
+        coleccion.setEstado(normalizarEstado(datos.getEstado()));
+
+        return colecciones.save(coleccion);
+    }
+
+    @Transactional
+    public HomeColeccion actualizarImagenColeccion(
+            Integer idColeccion,
+            String nombreImagen
+    ) {
+        HomeColeccion coleccion = buscarColeccion(idColeccion);
+        coleccion.setImagen(nombreImagen);
+        return colecciones.save(coleccion);
+    }
+
+    @Transactional
+    public HomeColeccion eliminarColeccion(Integer idColeccion) {
+        HomeColeccion coleccion = buscarColeccion(idColeccion);
+        colecciones.delete(coleccion);
+        return coleccion;
     }
 }

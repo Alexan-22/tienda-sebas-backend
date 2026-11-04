@@ -1,6 +1,6 @@
-
 package com.tiendasebas.tiendasebas.controller;
 
+import com.tiendasebas.tiendasebas.service.SaasActividadService;
 import com.tiendasebas.tiendasebas.entity.Rol;
 import com.tiendasebas.tiendasebas.entity.Usuario;
 import com.tiendasebas.tiendasebas.repository.RolRepository;
@@ -44,17 +44,20 @@ public class SuperAdminPropietarioController {
     private final UsuarioRepository usuarios;
     private final RolRepository roles;
     private final PasswordEncoder passwordEncoder;
+    private final SaasActividadService actividad;
 
     public SuperAdminPropietarioController(
             JdbcTemplate jdbc,
             UsuarioRepository usuarios,
             RolRepository roles,
-            PasswordEncoder passwordEncoder
+            PasswordEncoder passwordEncoder,
+            SaasActividadService actividad
     ) {
         this.jdbc = jdbc;
         this.usuarios = usuarios;
         this.roles = roles;
         this.passwordEncoder = passwordEncoder;
+        this.actividad = actividad;
     }
 
     // ========================================
@@ -181,7 +184,7 @@ public class SuperAdminPropietarioController {
     // - Con rol ADMIN
     // - De la tienda solicitada
     //
-    // No devuelve contraseñas.
+    // No devuelve contraseÃ±as.
 
     @GetMapping("/candidatos")
     public List<CandidatoPropietario> candidatos(
@@ -239,11 +242,11 @@ public class SuperAdminPropietarioController {
     // POST - CREAR CUENTA DE PROPIETARIO
     // ========================================
 
-    // La cuenta y su asignación se registran
-    // dentro de una misma transacción.
+    // La cuenta y su asignaciÃ³n se registran
+    // dentro de una misma transacciÃ³n.
     //
-    // Si la asignación falla, también se
-    // revierte la creación del usuario.
+    // Si la asignaciÃ³n falla, tambiÃ©n se
+    // revierte la creaciÃ³n del usuario.
     //
     // Nunca aceptamos un rol enviado
     // desde Angular.
@@ -320,7 +323,7 @@ public class SuperAdminPropietarioController {
 
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
-                    "El correo ya está registrado"
+                    "El correo ya estÃ¡ registrado"
             );
         }
 
@@ -366,11 +369,11 @@ public class SuperAdminPropietarioController {
             // =================================
 
             // ON CONFLICT DO NOTHING evita
-            // sustituir una asignación existente.
+            // sustituir una asignaciÃ³n existente.
             //
-            // Si otro administrador realizó una
-            // asignación simultáneamente, se
-            // rechaza y se revierte la transacción.
+            // Si otro administrador realizÃ³ una
+            // asignaciÃ³n simultÃ¡neamente, se
+            // rechaza y se revierte la transacciÃ³n.
 
             int asignaciones = jdbc.update(
                     """
@@ -394,6 +397,8 @@ public class SuperAdminPropietarioController {
                 );
             }
 
+            actividad.registrar("CREAR", "PROPIETARIO", creado.getIdUsuario(),
+                    "Se creó un propietario para la tienda ID " + tiendaId);
             return obtenerPorTienda(tiendaId);
 
         } catch (DataIntegrityViolationException ex) {
@@ -417,7 +422,7 @@ public class SuperAdminPropietarioController {
     // - De la MISMA tienda
     //
     // Si hay un propietario anterior, se
-    // reemplaza su asignación principal.
+    // reemplaza su asignaciÃ³n principal.
     //
     // No cambia ni elimina las cuentas.
 
@@ -481,9 +486,9 @@ public class SuperAdminPropietarioController {
         // INSERTAR O ACTUALIZAR ASIGNACION
         // ====================================
 
-        // La base de datos también tiene una
+        // La base de datos tambiÃ©n tiene una
         // FK compuesta (tienda_id, usuario_id)
-        // que impide vínculos entre tiendas.
+        // que impide vÃ­nculos entre tiendas.
 
         jdbc.update(
                 """
@@ -502,6 +507,8 @@ public class SuperAdminPropietarioController {
                 usuarioId
         );
 
+        actividad.registrar("ASIGNAR", "PROPIETARIO", usuarioId,
+                "Se asignó un propietario a la tienda ID " + tiendaId);
         return obtenerPorTienda(tiendaId);
     }
 
@@ -568,7 +575,7 @@ public class SuperAdminPropietarioController {
 
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "ID de tienda inválido"
+                    "ID de tienda invÃ¡lido"
             );
         }
 
@@ -646,7 +653,7 @@ public class SuperAdminPropietarioController {
 
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Correo electrónico inválido"
+                    "Correo electrÃ³nico invÃ¡lido"
             );
         }
 
@@ -654,7 +661,7 @@ public class SuperAdminPropietarioController {
     }
 
     // ========================================
-    // VALIDAR CONTRASEÑA
+    // VALIDAR CONTRASEÃ‘A
     // ========================================
 
     private void validarContrasena(
@@ -665,7 +672,7 @@ public class SuperAdminPropietarioController {
 
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Contraseña obligatoria"
+                    "ContraseÃ±a obligatoria"
             );
         }
 
@@ -673,7 +680,7 @@ public class SuperAdminPropietarioController {
                 StandardCharsets.UTF_8
         ).length;
 
-        // BCrypt utiliza como máximo
+        // BCrypt utiliza como mÃ¡ximo
         // los primeros 72 bytes.
         // No aceptamos truncamiento.
 
@@ -684,7 +691,7 @@ public class SuperAdminPropietarioController {
 
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "La contraseña debe contener entre 12 y 72 bytes UTF-8"
+                    "La contraseÃ±a debe contener entre 12 y 72 bytes UTF-8"
             );
         }
     }

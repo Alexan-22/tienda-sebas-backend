@@ -14,7 +14,7 @@ public class Categoria {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer idCategoria;
 
-    @Column(nullable = false, unique = true, length = 100)
+    @Column(nullable = false, length = 100)
     private String nombreCategoria;
 
     @Column(nullable = false)
@@ -22,5 +22,5 @@ public class Categoria {
 
     //Mapeo de tienda_id en Entidades Existentes
     @Column(name = "tienda_id", nullable = false)
-    private Long tiendaId = 1L;
+    private Long tiendaId;
 }

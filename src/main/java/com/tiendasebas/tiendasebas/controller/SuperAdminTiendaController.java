@@ -1,7 +1,8 @@
-
 package com.tiendasebas.tiendasebas.controller;
 
+import com.tiendasebas.tiendasebas.service.SaasActividadService;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
@@ -27,6 +28,7 @@ import java.util.regex.Pattern;
 public class SuperAdminTiendaController {
 
     private final JdbcTemplate jdbcTemplate;
+    private final SaasActividadService actividad;
 
     // ========================================
     // VALIDACIONES
@@ -51,9 +53,11 @@ public class SuperAdminTiendaController {
     // ========================================
 
     public SuperAdminTiendaController(
-            JdbcTemplate jdbcTemplate
+            JdbcTemplate jdbcTemplate,
+            SaasActividadService actividad
     ) {
         this.jdbcTemplate = jdbcTemplate;
+        this.actividad = actividad;
     }
 
     // ========================================
@@ -115,14 +119,14 @@ public class SuperAdminTiendaController {
         if (pagina < 0 || pagina > 100000) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Página inválida"
+                    "PÃ¡gina invÃ¡lida"
             );
         }
 
         if (tamano < 1 || tamano > 100) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "El tamaño debe estar entre 1 y 100"
+                    "El tamaÃ±o debe estar entre 1 y 100"
             );
         }
 
@@ -133,7 +137,7 @@ public class SuperAdminTiendaController {
         if (busqueda.length() > 80) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "La búsqueda es demasiado larga"
+                    "La bÃºsqueda es demasiado larga"
             );
         }
 
@@ -210,6 +214,7 @@ public class SuperAdminTiendaController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @Transactional
     public TiendaResumen crear(
             @RequestBody CrearTiendaRequest request
     ) {
@@ -230,8 +235,8 @@ public class SuperAdminTiendaController {
         );
 
         // DETECTAR DUPLICADOS
-        // PostgreSQL también garantiza unicidad
-        // mediante el índice creado anteriormente.
+        // PostgreSQL tambiÃ©n garantiza unicidad
+        // mediante el Ã­ndice creado anteriormente.
 
         Long existentes = jdbcTemplate.queryForObject(
                 """
@@ -246,11 +251,11 @@ public class SuperAdminTiendaController {
         if (existentes != null && existentes > 0) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
-                    "El subdominio ya está registrado"
+                    "El subdominio ya estÃ¡ registrado"
             );
         }
 
-        // El estado inicial será ACTIVA.
+        // El estado inicial serÃ¡ ACTIVA.
         // PostgreSQL ya tiene ese DEFAULT.
 
         String sql = """
@@ -286,13 +291,15 @@ public class SuperAdminTiendaController {
                 );
             }
 
+            actividad.registrar("CREAR", "TIENDA", creada.id(),
+                    "Se creó una tienda");
             return creada;
 
         } catch (DuplicateKeyException ex) {
 
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
-                    "El subdominio ya está registrado",
+                    "El subdominio ya estÃ¡ registrado",
                     ex
             );
         }
@@ -303,6 +310,7 @@ public class SuperAdminTiendaController {
     // ========================================
 
     @PutMapping("/{id}")
+    @Transactional
     public TiendaResumen actualizar(
             @PathVariable Long id,
             @RequestBody ActualizarTiendaRequest request
@@ -334,7 +342,7 @@ public class SuperAdminTiendaController {
         );
 
         // No modificamos el estado durante
-        // la edición de información comercial.
+        // la ediciÃ³n de informaciÃ³n comercial.
 
         String sql = """
                 UPDATE public.tiendas
@@ -374,6 +382,8 @@ public class SuperAdminTiendaController {
                 );
             }
 
+            actividad.registrar("ACTUALIZAR", "TIENDA", id,
+                    "Se actualizaron los datos de una tienda");
             return actualizadas.get(0);
 
         } catch (DuplicateKeyException ex) {
@@ -391,6 +401,7 @@ public class SuperAdminTiendaController {
     // ========================================
 
     @PutMapping("/{id}/activar")
+    @Transactional
     public TiendaResumen activar(
             @PathVariable Long id
     ) {
@@ -406,6 +417,7 @@ public class SuperAdminTiendaController {
     // ========================================
 
     @PutMapping("/{id}/suspender")
+    @Transactional
     public TiendaResumen suspender(
             @PathVariable Long id
     ) {
@@ -421,6 +433,7 @@ public class SuperAdminTiendaController {
     // ========================================
 
     @PutMapping("/{id}/pendiente")
+    @Transactional
     public TiendaResumen marcarPendiente(
             @PathVariable Long id
     ) {
@@ -443,7 +456,7 @@ public class SuperAdminTiendaController {
         validarId(id);
 
         // El estado solo puede provenir
-        // de los métodos activar, suspender
+        // de los mÃ©todos activar, suspender
         // o marcarPendiente.
 
         String sql = """
@@ -475,7 +488,13 @@ public class SuperAdminTiendaController {
             );
         }
 
-        return resultado.get(0);
+        TiendaResumen tienda = resultado.get(0);
+        actividad.registrar(
+                nuevoEstado.equals(ACTIVA) ? "ACTIVAR" :
+                nuevoEstado.equals(SUSPENDIDA) ? "SUSPENDER" : "PENDIENTE",
+                "TIENDA", id, "Estado de tienda establecido en " + nuevoEstado
+        );
+        return tienda;
     }
 
     // ========================================
@@ -489,7 +508,7 @@ public class SuperAdminTiendaController {
         if (id == null || id <= 0) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Identificador de tienda inválido"
+                    "Identificador de tienda invÃ¡lido"
             );
         }
     }
@@ -537,7 +556,7 @@ public class SuperAdminTiendaController {
 
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Subdominio inválido"
+                    "Subdominio invÃ¡lido"
             );
         }
 
@@ -609,7 +628,7 @@ public class SuperAdminTiendaController {
 
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "El logo debe utilizar una URL HTTPS válida"
+                    "El logo debe utilizar una URL HTTPS vÃ¡lida"
             );
         }
     }
@@ -642,5 +661,3 @@ public class SuperAdminTiendaController {
         );
     }
 }
-
-

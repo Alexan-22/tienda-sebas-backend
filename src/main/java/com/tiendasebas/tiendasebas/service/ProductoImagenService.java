@@ -1,12 +1,14 @@
-
 package com.tiendasebas.tiendasebas.service;
 
+import com.tiendasebas.tiendasebas.config.TenantContext;
 import com.tiendasebas.tiendasebas.entity.Producto;
 import com.tiendasebas.tiendasebas.entity.ProductoImagen;
 import com.tiendasebas.tiendasebas.repository.ProductoImagenRepository;
 import com.tiendasebas.tiendasebas.repository.ProductoRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -41,31 +43,52 @@ public class ProductoImagenService {
     }
 
     // ============================================================
-    // LISTAR IMÁGENES
+    // LISTAR IMÃGENES
     // ============================================================
     public List<ProductoImagen> listarPorProducto(Integer idProducto) {
-        if (!productoRepository.existsById(idProducto)) {
-            throw new RuntimeException("Producto no encontrado");
+        Long tiendaId = TenantContext.getCurrentTenant();
+        Producto producto = productoRepository.findByIdProductoAndTiendaId(idProducto, tiendaId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Producto no encontrado"));
+        if (!Boolean.TRUE.equals(producto.getEstado())) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Producto no disponible");
         }
-        return productoImagenRepository.findByProductoIdProductoOrderByOrdenAsc(idProducto);
+        return productoImagenRepository.findByProductoIdProductoAndProductoTiendaIdOrderByOrdenAsc(idProducto, tiendaId);
     }
 
+
+    public List<ProductoImagen> listarPorProductoAdmin(Integer idProducto) {
+        Long tiendaId = TenantContext.getCurrentTenant();
+        productoRepository.findByIdProductoAndTiendaId(idProducto, tiendaId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Producto no encontrado"));
+        return productoImagenRepository.findByProductoIdProductoAndProductoTiendaIdOrderByOrdenAsc(idProducto, tiendaId);
+    }
 
     // ============================================================
     // SUBIR Y REGISTRAR IMAGEN
     // ============================================================
     public ProductoImagen subir(Integer idProducto, MultipartFile archivo, Integer orden) {
-        Producto producto = productoRepository.findById(idProducto)
-                .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+        Long tiendaId = TenantContext.getCurrentTenant();
+        Producto producto = productoRepository.findByIdProductoAndTiendaId(idProducto, tiendaId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Producto no encontrado"));
 
         validarArchivo(archivo);
+        // 12 fotografías en total, contando la portada del producto.
+        // El contador se valida también en backend, no solo Angular.
+        long adicionales = productoImagenRepository.countByProductoIdProductoAndProductoTiendaId(idProducto, tiendaId);
+        long portada = producto.getImagen() == null || producto.getImagen().isBlank() ? 0 : 1;
+        if (adicionales + portada >= 12) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Máximo 12 fotografías por producto");
+        }
+        if (orden == null || orden < 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Orden inválido");
+        }
 
         String extension = obtenerExtension(archivo.getOriginalFilename());
         String nombreArchivo = UUID.randomUUID() + "." + extension;
         boolean supabase = "supabase".equalsIgnoreCase(storageProvider);
 
         if (supabase) {
-            // Producción: guardar en Supabase Storage
+            // ProducciÃ³n: guardar en Supabase Storage
             supabaseStorageService.subir(archivo, "productos/" + nombreArchivo);
         } else if ("local".equalsIgnoreCase(storageProvider)) {
             // Desarrollo: conservar almacenamiento local
@@ -84,7 +107,7 @@ public class ProductoImagenService {
                 throw new RuntimeException("Error al guardar la imagen", e);
             }
         } else {
-            throw new IllegalStateException("Proveedor de almacenamiento no válido");
+            throw new IllegalStateException("Proveedor de almacenamiento no vÃ¡lido");
         }
 
         ProductoImagen productoImagen = new ProductoImagen();
@@ -95,7 +118,7 @@ public class ProductoImagenService {
         try {
             return productoImagenRepository.save(productoImagen);
         } catch (RuntimeException e) {
-            // Evitar dejar archivos huérfanos si falla PostgreSQL
+            // Evitar dejar archivos huÃ©rfanos si falla PostgreSQL
             try {
                 if (supabase) {
                     supabaseStorageService.eliminar("productos/" + nombreArchivo);
@@ -115,11 +138,13 @@ public class ProductoImagenService {
     // ELIMINAR IMAGEN
     // ============================================================
     public void eliminar(Integer idImagen) {
+        Long tiendaId = TenantContext.getCurrentTenant();
         ProductoImagen imagen = productoImagenRepository.findById(idImagen)
-                .orElseThrow(() -> new RuntimeException("Imagen no encontrada"));
+                .filter(i -> i.getProducto() != null && tiendaId.equals(i.getProducto().getTiendaId()))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Imagen no encontrada"));
 
         if ("supabase".equalsIgnoreCase(storageProvider)) {
-            // Producción: eliminar imagen de Supabase Storage
+            // ProducciÃ³n: eliminar imagen de Supabase Storage
             supabaseStorageService.eliminar("productos/" + imagen.getImagen());
 
         } else if ("local".equalsIgnoreCase(storageProvider)) {
@@ -138,7 +163,7 @@ public class ProductoImagenService {
                 throw new RuntimeException("No se pudo eliminar el archivo de imagen", e);
             }
         } else {
-            throw new IllegalStateException("Proveedor de almacenamiento no válido");
+            throw new IllegalStateException("Proveedor de almacenamiento no vÃ¡lido");
         }
 
         productoImagenRepository.delete(imagen);
@@ -153,10 +178,10 @@ public class ProductoImagenService {
         }
 
         if (archivo.getContentType() == null || !TIPOS_PERMITIDOS.contains(archivo.getContentType())) {
-            throw new RuntimeException("Solo se permiten imágenes JPG, PNG o WEBP");
+            throw new RuntimeException("Solo se permiten imÃ¡genes JPG, PNG o WEBP");
         }
 
-        // Máximo 5 MB por imagen
+        // MÃ¡ximo 5 MB por imagen
         if (archivo.getSize() > 5 * 1024 * 1024) {
             throw new RuntimeException("La imagen no puede superar los 5 MB");
         }
@@ -164,13 +189,13 @@ public class ProductoImagenService {
         String extension = obtenerExtension(archivo.getOriginalFilename());
 
         if (!Set.of("jpg", "jpeg", "png", "webp").contains(extension)) {
-            throw new RuntimeException("Extensión de imagen no permitida");
+            throw new RuntimeException("ExtensiÃ³n de imagen no permitida");
         }
     }
 
     private String obtenerExtension(String nombre) {
         if (nombre == null || !nombre.contains(".")) {
-            throw new RuntimeException("El archivo no tiene una extensión válida");
+            throw new RuntimeException("El archivo no tiene una extensiÃ³n vÃ¡lida");
         }
 
         return nombre.substring(nombre.lastIndexOf(".") + 1).toLowerCase();

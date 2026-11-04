@@ -14,7 +14,7 @@ import java.util.Optional;
 @Repository
 public interface ProductoTallaRepository extends JpaRepository<ProductoTalla, Integer> {
 
-    // Métodos base requeridos por ProductoTallaService
+    // MÃ©todos base requeridos por ProductoTallaService
     List<ProductoTalla> findByProductoIdProducto(Integer idProducto);
     Optional<ProductoTalla> findByProductoIdProductoAndTallaIdTalla(Integer idProducto, Integer idTalla);
 
@@ -23,20 +23,35 @@ public interface ProductoTallaRepository extends JpaRepository<ProductoTalla, In
             FROM ProductoTalla pt
             JOIN FETCH pt.producto p
             JOIN FETCH pt.talla t
+            WHERE p.tiendaId = :tiendaId
             ORDER BY p.idProducto, t.idTalla
             """)
-    List<ProductoTalla> listarInventarioCompleto();
+    List<ProductoTalla> listarInventarioCompletoPorTienda(@Param("tiendaId") Long tiendaId);
 
-    // Métodos Multi-tenant (ya agregados previamente)
+    // MÃ©todos Multi-tenant (ya agregados previamente)
     List<ProductoTalla> findByProductoIdProductoAndProductoTiendaId(Integer idProducto, Long tiendaId);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
             SELECT pt
             FROM ProductoTalla pt
             JOIN FETCH pt.producto p
             JOIN FETCH pt.talla
             WHERE pt.idProductoTalla = :idProductoTalla
-            AND p.tiendaId = :tiendaId
+              AND p.tiendaId = :tiendaId
             """)
     Optional<ProductoTalla> buscarPorIdParaCompra(@Param("idProductoTalla") Integer idProductoTalla, @Param("tiendaId") Long tiendaId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            SELECT pt FROM ProductoTalla pt
+            JOIN FETCH pt.producto p
+            JOIN FETCH pt.talla
+            WHERE pt.idProductoTalla = :id
+              AND p.tiendaId = :tiendaId
+            """)
+    Optional<ProductoTalla> buscarPorIdConBloqueo(@Param("id") Integer id, @Param("tiendaId") Long tiendaId);
+
+    Optional<ProductoTalla> findByProductoIdProductoAndTallaIdTallaAndProductoTiendaId(
+            Integer idProducto, Integer idTalla, Long tiendaId);
 }

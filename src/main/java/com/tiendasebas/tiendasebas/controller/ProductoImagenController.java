@@ -26,6 +26,11 @@ public class ProductoImagenController {
         return ResponseEntity.ok(productoImagenService.listarPorProducto(idProducto));
     }
 
+    @GetMapping("/admin/producto/{idProducto}")
+    public ResponseEntity<List<ProductoImagen>> listarAdmin(@PathVariable Integer idProducto) {
+        return ResponseEntity.ok(productoImagenService.listarPorProductoAdmin(idProducto));
+    }
+
     // ============================================================
     // ADMIN - SUBIR IMAGEN
     // ============================================================

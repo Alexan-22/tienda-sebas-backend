@@ -27,20 +27,36 @@ public class CategoriaService {
                 .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
     }
 
+
     public Categoria guardar(Categoria categoria) {
-        // CAMBIA AQUÍ 'getNombreCategoria' o 'getNombre' según tu entidad real
-        if (categoria == null || categoria.getNombreCategoria() == null || categoria.getNombreCategoria().isBlank()) {
-            throw new RuntimeException("El nombre de la categoría es obligatorio");
+        if (categoria == null ||
+                categoria.getNombreCategoria() == null ||
+                categoria.getNombreCategoria().isBlank()) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.BAD_REQUEST,
+                    "El nombre de la categoría es obligatorio"
+            );
         }
 
-        // CAMBIA AQUÍ 'setNombreCategoria' o 'setNombre'
-        categoria.setNombreCategoria(categoria.getNombreCategoria().trim());
+        Long tiendaId = TenantContext.getCurrentTenant();
 
-        if (categoria.getTiendaId() == null) {
-            categoria.setTiendaId(TenantContext.getCurrentTenant());
+        if (tiendaId == null) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.FORBIDDEN,
+                    "Tienda no identificada"
+            );
         }
+
+        categoria.setIdCategoria(null);
+        categoria.setTiendaId(tiendaId);
+        categoria.setNombreCategoria(
+                categoria.getNombreCategoria().trim()
+        );
+        categoria.setEstado(true);
+
         return categoriaRepository.save(categoria);
     }
+
 
     public Categoria actualizar(Integer idCategoria, Categoria datos) {
         Categoria categoria = buscarPorId(idCategoria);
