@@ -1,10 +1,9 @@
 package com.tiendasebas.tiendasebas.dto;
 
-/** Datos públicos de diseño de tienda; no incluye secretos ni contacto interno. */
+/** Configuracion publica sin datos privados de propietarios. */
 public record TiendaPublicaResponse(
-        Long id,
-        String nombre,
-        String subdominio,
-        String colorPrimario,
-        String logoUrl
+        Long id, String nombre, String subdominio,
+        String colorPrimario, String logoUrl,
+        String colorSecundario, String telefonoSoporte,
+        String whatsapp, String descripcionComercial
 ) {}

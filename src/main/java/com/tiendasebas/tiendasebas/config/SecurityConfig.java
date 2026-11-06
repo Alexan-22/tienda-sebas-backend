@@ -1,4 +1,3 @@
-
 package com.tiendasebas.tiendasebas.config;
 
 import com.tiendasebas.tiendasebas.security.JwtAuthenticationFilter;
@@ -78,6 +77,10 @@ public class SecurityConfig {
                 )
 
                 .authorizeHttpRequests(auth -> auth
+                        // Bloquear escritura legacy con tenantId proporcionado por cliente.
+                        .requestMatchers(HttpMethod.POST, "/api/categorias").denyAll()
+                        .requestMatchers(HttpMethod.PUT, "/api/categorias/*").denyAll()
+                        .requestMatchers(HttpMethod.DELETE, "/api/categorias/*").denyAll()
 
                         // CORS
 
@@ -102,6 +105,15 @@ public class SecurityConfig {
                                 "/api/superadmin/**"
                         ).hasRole("SUPER_ADMIN")
 
+                        .requestMatchers(
+                                "/api/categorias/admin",
+                                "/api/categorias/admin/**",
+                                "/api/productos/admin",
+                                "/api/productos/admin/**"
+                        ).hasRole("ADMIN")
+
+                                                // B2B-SAAS-FASE2A: Configuracion y escalas de consulta publica
+                        .requestMatchers(HttpMethod.GET, "/api/b2b/public/**").permitAll()
                         // ENDPOINTS PUBLICOS
 
                         .requestMatchers(
@@ -111,13 +123,17 @@ public class SecurityConfig {
                                 "/api/producto-tallas/producto/**",
                                 "/api/producto-imagenes/producto/**",
                                 "/api/categorias",
-                                "/api/categorias/**",
                                 "/api/generos/**",
                                 "/api/tallas/**",
                                 "/api/home/public/**",
                                 "/uploads/**"
                         ).permitAll()
 
+                        // CONFIGURACION DE IDENTIDAD: ADMIN AUTENTICADO DE SU TENANT
+                        .requestMatchers("/api/v1/tiendas/admin/**").hasRole("ADMIN")
+
+                                                // B2B-SAAS-FASE2A: Escritura y administracion solo del propietario
+                        .requestMatchers("/api/b2b/admin/**").hasRole("ADMIN")
                         // ADMINISTRACION POR TIENDA
 
                         .requestMatchers(
@@ -216,4 +232,3 @@ public class SecurityConfig {
         return source;
     }
 }
-

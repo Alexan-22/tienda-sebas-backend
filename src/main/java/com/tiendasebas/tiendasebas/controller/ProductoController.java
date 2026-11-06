@@ -82,6 +82,16 @@ public class ProductoController {
     // ============================================================
     // ADMIN - REGISTRAR
     // ============================================================
+    @GetMapping("/admin")
+    public ResponseEntity<List<Producto>> listarAdmin() {
+        return ResponseEntity.ok(productoService.listarAdmin());
+    }
+
+    @GetMapping("/admin/{id}")
+    public ResponseEntity<Producto> buscarAdmin(@PathVariable Integer id) {
+        return ResponseEntity.ok(productoService.buscarAdmin(id));
+    }
+
     @PostMapping("/admin")
     public ResponseEntity<Producto> guardar(@RequestBody Producto producto, @RequestParam Integer idGenero, @RequestParam Integer idCategoria) {
         return ResponseEntity.ok(productoService.guardar(producto, idGenero, idCategoria));

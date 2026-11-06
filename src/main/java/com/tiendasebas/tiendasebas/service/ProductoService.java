@@ -32,6 +32,24 @@ public class ProductoService {
         return productoRepository.findByEstadoTrueAndTiendaId(tiendaId);
     }
 
+    public List<Producto> listarAdmin() {
+        Long tiendaId = TenantContext.getCurrentTenant();
+        return productoRepository.findByTiendaId(tiendaId);
+    }
+
+    public Producto buscarAdmin(Integer id) {
+        Long tiendaId = TenantContext.getCurrentTenant();
+
+        return productoRepository
+                .findByIdProductoAndTiendaId(id, tiendaId)
+                .orElseThrow(() ->
+                    new org.springframework.web.server.ResponseStatusException(
+                        org.springframework.http.HttpStatus.NOT_FOUND,
+                        "Producto no encontrado"
+                    )
+                );
+    }
+
     public Producto buscar(Integer id) {
         Long tiendaId = TenantContext.getCurrentTenant();
         Producto producto = productoRepository.findByIdProductoAndTiendaId(id, tiendaId)
@@ -93,11 +111,12 @@ public class ProductoService {
                 .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
 
         normalizarProducto(producto);
+        producto.setIdProducto(null);
 
         producto.setTiendaId(tiendaId);
         producto.setGenero(genero);
         producto.setCategoria(categoria);
-        producto.setEstado(true);
+        producto.setEstado(producto.getEstado() == null || Boolean.TRUE.equals(producto.getEstado()));
         producto.setNuevo(Boolean.TRUE.equals(producto.getNuevo()));
         producto.setDestacado(Boolean.TRUE.equals(producto.getDestacado()));
 
@@ -128,6 +147,10 @@ public class ProductoService {
         producto.setDestacado(Boolean.TRUE.equals(datos.getDestacado()));
         producto.setGenero(genero);
         producto.setCategoria(categoria);
+
+        if (datos.getEstado() != null) {
+            producto.setEstado(datos.getEstado());
+        }
 
         return productoRepository.save(producto);
     }

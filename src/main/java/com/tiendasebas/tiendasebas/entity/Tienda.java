@@ -1,4 +1,3 @@
-
 package com.tiendasebas.tiendasebas.entity;
 
 import jakarta.persistence.*;
@@ -6,7 +5,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 
 // ============================================
 // SEBAS COLLECTION SAAS
@@ -70,6 +69,18 @@ public class Tienda {
     )
     private String logoUrl;
 
+    @Column(name = "color_secundario", length = 20)
+    private String colorSecundario = "#FFFFFF";
+
+    @Column(name = "telefono_soporte", length = 20)
+    private String telefonoSoporte;
+
+    @Column(name = "whatsapp", length = 20)
+    private String whatsapp;
+
+    @Column(name = "descripcion_comercial", length = 500)
+    private String descripcionComercial;
+
     // ========================================
     // ESTADO DE LA TIENDA
     // ========================================
@@ -104,5 +115,5 @@ public class Tienda {
             insertable = false,
             updatable = false
     )
-    private OffsetDateTime creadoEn;
+    private LocalDateTime creadoEn;
 }

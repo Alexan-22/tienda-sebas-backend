@@ -32,19 +32,25 @@ public class VentaService {
     private final UsuarioRepository usuarioRepository;
     private final DeliveryService deliveryService;
     private final ClientePresencialService clientePresencialService;
+    private final ContraEntregaService contraEntregaService;
+    private final CancelacionCodService cancelacionCodService;
 
     public VentaService(VentaRepository ventaRepository,
                         DetalleVentaRepository detalleVentaRepository,
                         ProductoTallaRepository productoTallaRepository,
                         UsuarioRepository usuarioRepository,
                         DeliveryService deliveryService,
-                        ClientePresencialService clientePresencialService) {
+                        ClientePresencialService clientePresencialService,
+                        ContraEntregaService contraEntregaService,
+                        CancelacionCodService cancelacionCodService) {
         this.ventaRepository = ventaRepository;
         this.detalleVentaRepository = detalleVentaRepository;
         this.productoTallaRepository = productoTallaRepository;
         this.usuarioRepository = usuarioRepository;
         this.deliveryService = deliveryService;
         this.clientePresencialService = clientePresencialService;
+        this.contraEntregaService = contraEntregaService;
+        this.cancelacionCodService = cancelacionCodService;
     }
 
     // =========================================================
@@ -123,7 +129,11 @@ public class VentaService {
         // PROCESAR PRODUCTOS
         // =====================================================
         BigDecimal subtotalProductos = BigDecimal.ZERO;
-        for (CompraItemDto item : request.getItems()) {
+        for (CompraItemDto item : request.getItems().stream()
+        .sorted(java.util.Comparator.comparing(
+                CompraItemDto::getIdProductoTalla,
+                java.util.Comparator.nullsFirst(java.util.Comparator.naturalOrder())))
+        .toList()) {
             subtotalProductos = subtotalProductos.add(
                     procesarItemVenta(venta, item.getIdProductoTalla(), item.getCantidad(), tiendaId)
             );
@@ -136,7 +146,10 @@ public class VentaService {
         venta.setSubtotal(subtotalProductos);
         venta.setCostoDelivery(costoDelivery);
         venta.setTotal(total);
-        ventaRepository.save(venta);
+        ventaRepository.saveAndFlush(venta);
+        if ("CONTRA_ENTREGA".equals(medioPago)) {
+            contraEntregaService.registrarPendiente(venta);
+        }
 
         return new CompraResponse(
                 venta.getIdVenta(),
@@ -145,7 +158,7 @@ public class VentaService {
                 total,
                 venta.getEstado(),
                 venta.getMedioPago(),
-                "Compra realizada correctamente"
+                ("CONTRA_ENTREGA".equals(medioPago) ? "Pedido contra entrega registrado; pago pendiente" : "Compra realizada correctamente")
         );
     }
 
@@ -186,7 +199,11 @@ public class VentaService {
         // PROCESAR PRODUCTOS
         // =====================================================
         BigDecimal subtotal = BigDecimal.ZERO;
-        for (VentaPosItemRequest item : request.getItems()) {
+        for (VentaPosItemRequest item : request.getItems().stream()
+        .sorted(java.util.Comparator.comparing(
+                VentaPosItemRequest::getIdProductoTalla,
+                java.util.Comparator.nullsFirst(java.util.Comparator.naturalOrder())))
+        .toList()) {
             subtotal = subtotal.add(
                     procesarItemVenta(venta, item.getIdProductoTalla(), item.getCantidad(), tiendaId)
             );
@@ -350,7 +367,7 @@ public class VentaService {
         }
 
         Long tiendaId = TenantContext.getCurrentTenant();
-        Venta venta = ventaRepository.findByIdVentaAndTiendaId(idVenta, tiendaId)
+        Venta venta = ventaRepository.buscarPorIdYTiendaConBloqueo(idVenta, tiendaId)
                 .orElseThrow(() -> new CompraException("La venta no existe"));
 
         if (obtenerTipoVentaSeguro(venta) == TipoVenta.PRESENCIAL) {
@@ -359,6 +376,11 @@ public class VentaService {
 
         EstadoPedido estadoActual = obtenerEstadoPedidoSeguro(venta);
         validarTransicionEstado(estadoActual, estadoPedido);
+        // La ruta generica no puede cancelar sin reponer stock.
+        if (estadoPedido == EstadoPedido.CANCELADO) {
+            throw new CompraException("Cancelacion generica bloqueada para proteger el stock. COD pendiente: utilizar cancelacion dedicada; otros pagos requieren devolucion supervisada.");
+        }
+        cancelacionCodService.validarEstadoComercialCod(venta, estadoPedido);
         venta.setEstadoPedido(estadoPedido);
         ventaRepository.save(venta);
 
@@ -536,7 +558,7 @@ public class VentaService {
             throw new CompraException("Debe seleccionar un medio de pago");
         }
         String medioPagoNormalizado = medioPago.trim().toUpperCase();
-        if (!medioPagoNormalizado.equals("YAPE") && !medioPagoNormalizado.equals("TARJETA")) {
+        if (!medioPagoNormalizado.equals("YAPE") && !medioPagoNormalizado.equals("TARJETA") && !medioPagoNormalizado.equals("CONTRA_ENTREGA")) {
             throw new CompraException("Medio de pago no válido");
         }
         return medioPagoNormalizado;

@@ -69,11 +69,16 @@ public class CategoriaService {
         // CAMBIA AQUÍ 'setNombreCategoria' o 'setNombre'
         categoria.setNombreCategoria(datos.getNombreCategoria().trim());
 
+        if (datos.getEstado() != null) {
+            categoria.setEstado(datos.getEstado());
+        }
+
         return categoriaRepository.save(categoria);
     }
 
     public void eliminar(Integer idCategoria) {
         Categoria categoria = buscarPorId(idCategoria);
-        categoriaRepository.delete(categoria);
+        categoria.setEstado(false);
+        categoriaRepository.save(categoria);
     }
 }
