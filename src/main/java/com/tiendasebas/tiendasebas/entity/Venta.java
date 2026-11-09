@@ -157,5 +157,13 @@ public class Venta {
 
     //Mapeo de tienda_id en Entidades Existentes
     @Column(name = "tienda_id", nullable = false)
-    private Long tiendaId = 1L;
+    private Long tiendaId;
+
+    @PrePersist
+    @PreUpdate
+    private void validarTienda() {
+        if (tiendaId == null || tiendaId <= 0) {
+            throw new IllegalStateException("La venta requiere una tienda valida");
+        }
+    }
 }

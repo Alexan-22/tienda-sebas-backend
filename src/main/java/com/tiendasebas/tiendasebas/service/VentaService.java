@@ -1,6 +1,8 @@
 package com.tiendasebas.tiendasebas.service;
 
 import com.tiendasebas.tiendasebas.config.TenantContext;
+import com.tiendasebas.tiendasebas.transferencias.TransferenciaManualService;
+import com.tiendasebas.tiendasebas.yape.PagoYapeManualService;
 import com.tiendasebas.tiendasebas.dto.*;
 import com.tiendasebas.tiendasebas.entity.ClientePresencial;
 import com.tiendasebas.tiendasebas.entity.DetalleVenta;
@@ -34,6 +36,8 @@ public class VentaService {
     private final ClientePresencialService clientePresencialService;
     private final ContraEntregaService contraEntregaService;
     private final CancelacionCodService cancelacionCodService;
+    private final PagoYapeManualService pagoYapeManualService;
+    private final TransferenciaManualService transferencias;
 
     public VentaService(VentaRepository ventaRepository,
                         DetalleVentaRepository detalleVentaRepository,
@@ -42,7 +46,8 @@ public class VentaService {
                         DeliveryService deliveryService,
                         ClientePresencialService clientePresencialService,
                         ContraEntregaService contraEntregaService,
-                        CancelacionCodService cancelacionCodService) {
+                        CancelacionCodService cancelacionCodService,
+                        PagoYapeManualService pagoYapeManualService, TransferenciaManualService transferencias) {
         this.ventaRepository = ventaRepository;
         this.detalleVentaRepository = detalleVentaRepository;
         this.productoTallaRepository = productoTallaRepository;
@@ -51,6 +56,8 @@ public class VentaService {
         this.clientePresencialService = clientePresencialService;
         this.contraEntregaService = contraEntregaService;
         this.cancelacionCodService = cancelacionCodService;
+        this.pagoYapeManualService = pagoYapeManualService;
+        this.transferencias = transferencias;
     }
 
     // =========================================================
@@ -68,7 +75,17 @@ public class VentaService {
             throw new CompraException("El carrito está vacío");
         }
         String medioPago = validarMedioPagoOnline(request.getMedioPago());
+        if ("YAPE".equals(medioPago)) {
+            CompraResponse anterior = pagoYapeManualService.recuperarCompra(request, usuario);
+            if (anterior != null) return anterior;
+            pagoYapeManualService.validarHabilitado(tiendaId);
+        }
 
+        if ("TRANSFERENCIA".equals(medioPago)) {
+            CompraResponse anterior=transferencias.recuperarCompra(request,usuario);
+            if(anterior!=null) return anterior;
+            transferencias.validarHabilitado(request.getCuentaBancariaId());
+        }
         // =====================================================
         // DIRECCIÓN DE ENVÍO
         // =====================================================
@@ -116,7 +133,7 @@ public class VentaService {
         venta.setClientePresencial(null);
         venta.setTipoVenta(TipoVenta.ONLINE);
         venta.setFechaVenta(LocalDateTime.now());
-        venta.setEstado("REGISTRADA");
+        venta.setEstado(("YAPE".equals(medioPago) || "TRANSFERENCIA".equals(medioPago)) ? "PAGO_PENDIENTE" : "REGISTRADA");
         venta.setEstadoPedido(EstadoPedido.RECIBIDO);
         venta.setMedioPago(medioPago);
         venta.setDireccionEnvio(direccionEnvio);
@@ -150,7 +167,15 @@ public class VentaService {
         if ("CONTRA_ENTREGA".equals(medioPago)) {
             contraEntregaService.registrarPendiente(venta);
         }
+        if ("YAPE".equals(medioPago)) {
+            pagoYapeManualService.registrarPendiente(venta, usuario);
+            pagoYapeManualService.recordarCompra(request, usuario, venta);
+        }
 
+        if ("TRANSFERENCIA".equals(medioPago)) {
+            transferencias.registrarPendiente(venta,usuario,request.getCuentaBancariaId());
+            transferencias.recordarCompra(request,usuario,venta);
+        }
         return new CompraResponse(
                 venta.getIdVenta(),
                 subtotalProductos,
@@ -158,7 +183,7 @@ public class VentaService {
                 total,
                 venta.getEstado(),
                 venta.getMedioPago(),
-                ("CONTRA_ENTREGA".equals(medioPago) ? "Pedido contra entrega registrado; pago pendiente" : "Compra realizada correctamente")
+                ("YAPE".equals(medioPago) ? "Pedido registrado. Pago Yape pendiente de verificacion del comerciante" : ("CONTRA_ENTREGA".equals(medioPago) ? "Pedido contra entrega registrado; pago pendiente" : "Compra realizada correctamente"))
         );
     }
 
@@ -381,6 +406,12 @@ public class VentaService {
             throw new CompraException("Cancelacion generica bloqueada para proteger el stock. COD pendiente: utilizar cancelacion dedicada; otros pagos requieren devolucion supervisada.");
         }
         cancelacionCodService.validarEstadoComercialCod(venta, estadoPedido);
+        if ("YAPE".equals(venta.getMedioPago())
+                && obtenerTipoVentaSeguro(venta) == TipoVenta.ONLINE
+                && estadoPedido != EstadoPedido.RECIBIDO) {
+            pagoYapeManualService.exigirAprobado(venta.getIdVenta());
+        }
+        if ("TRANSFERENCIA".equals(venta.getMedioPago()) && estadoPedido!=EstadoPedido.RECIBIDO) transferencias.exigirAprobado(idVenta);
         venta.setEstadoPedido(estadoPedido);
         ventaRepository.save(venta);
 
@@ -558,7 +589,7 @@ public class VentaService {
             throw new CompraException("Debe seleccionar un medio de pago");
         }
         String medioPagoNormalizado = medioPago.trim().toUpperCase();
-        if (!medioPagoNormalizado.equals("YAPE") && !medioPagoNormalizado.equals("TARJETA") && !medioPagoNormalizado.equals("CONTRA_ENTREGA")) {
+        if (!medioPagoNormalizado.equals("YAPE") && !medioPagoNormalizado.equals("TARJETA") && !medioPagoNormalizado.equals("CONTRA_ENTREGA") && !medioPagoNormalizado.equals("TRANSFERENCIA")) {
             throw new CompraException("Medio de pago no válido");
         }
         return medioPagoNormalizado;

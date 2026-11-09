@@ -31,6 +31,14 @@ public class ClientePresencialController {
     }
 
     // ADMIN - REGISTRAR CLIENTE PRESENCIAL
+    @PutMapping("/{idClientePresencial}")
+    public ResponseEntity<ClientePresencialResponse> actualizar(
+            @PathVariable Integer idClientePresencial,
+            @Valid @RequestBody ClientePresencialRequest request) {
+        return ResponseEntity.ok(clientePresencialService.actualizar(idClientePresencial, request));
+    }
+
+    // ADMIN - REGISTRAR CLIENTE PRESENCIAL
     @PostMapping
     public ResponseEntity<ClientePresencialResponse> registrar(@Valid @RequestBody ClientePresencialRequest request) {
         return ResponseEntity.ok(clientePresencialService.registrar(request));

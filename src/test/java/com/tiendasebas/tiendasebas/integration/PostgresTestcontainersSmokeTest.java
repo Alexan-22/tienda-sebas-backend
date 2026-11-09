@@ -30,7 +30,7 @@ class PostgresTestcontainersSmokeTest {
 
     private Connection abrir() throws SQLException {
         return DriverManager.getConnection(
-                postgres.getJdbcUrl(), postgres.getUsername(), postgres.getPassword());
+                PostgresTestSafety.verifiedUrl(postgres), postgres.getUsername(), postgres.getPassword());
     }
 
     @Test

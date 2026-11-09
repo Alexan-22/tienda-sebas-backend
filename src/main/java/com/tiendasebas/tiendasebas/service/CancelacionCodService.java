@@ -154,6 +154,18 @@ public class CancelacionCodService {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "Stock excede el maximo permitido");
             }
             inventario.save(variante);
+            // Ejecutar UPDATE antes de auditar; un fallo de kardex revierte ambos.
+            inventario.flush();
+            int movimiento = jdbc.update("""
+                    INSERT INTO public.inventario_kardex
+                      (tienda_id, id_venta, id_producto_talla, tipo, origen, cantidad,
+                       stock_anterior, stock_posterior, motivo, operador)
+                    VALUES (?,?,?,'ENTRADA','CANCELACION_COD',?,?,?,?,?)
+                    """, tienda, idVenta, item.getKey(), item.getValue(),
+                    stockActual, variante.getStock(), razon, operador);
+            if (movimiento != 1) {
+                throw new IllegalStateException("No se registro la reposicion en kardex");
+            }
         }
 
         int estadoCobro = jdbc.update("""

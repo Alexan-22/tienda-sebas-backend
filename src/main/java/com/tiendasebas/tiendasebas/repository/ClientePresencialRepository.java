@@ -9,6 +9,7 @@ import java.util.Optional;
 
 @Repository
 public interface ClientePresencialRepository extends JpaRepository<ClientePresencial, Integer> {
+    Optional<ClientePresencial> findByIdClientePresencialAndTiendaId(Integer idClientePresencial, Long tiendaId);
 
     // Métodos base requeridos por ClientePresencialService
     List<ClientePresencial> findByEstadoTrueOrderByNombreAscApellidoAsc();

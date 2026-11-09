@@ -37,7 +37,7 @@ public class ClientePresencialService {
     public List<ClientePresencialResponse> listarActivos() {
 
         return clientePresencialRepository
-                .findByEstadoTrueOrderByNombreAscApellidoAsc()
+                .findByEstadoTrueAndTiendaIdOrderByNombreAscApellidoAsc(tiendaActual())
                 .stream()
                 .map(this::convertirResponse)
                 .toList();
@@ -82,10 +82,10 @@ public class ClientePresencialService {
 
         if (
                 clientePresencialRepository
-                        .existsByTipoDocumentoIgnoreCaseAndNumeroDocumento(
+                        .findByTipoDocumentoIgnoreCaseAndNumeroDocumentoAndTiendaId(
                                 tipoDocumento,
-                                numeroDocumento
-                        )
+                                numeroDocumento, tiendaActual()
+                        ).isPresent()
         ) {
 
             throw new CompraException(
@@ -96,6 +96,7 @@ public class ClientePresencialService {
 
         ClientePresencial cliente =
                 new ClientePresencial();
+        cliente.setTiendaId(tiendaActual());
 
 
         cliente.setNombre(
@@ -176,11 +177,12 @@ public class ClientePresencialService {
 
         ClientePresencial cliente =
                 clientePresencialRepository
-                        .findById(
-                                idClientePresencial
+                        .findByIdClientePresencialAndTiendaId(
+                                idClientePresencial, tiendaActual()
                         )
                         .orElseThrow(
-                                () -> new CompraException(
+                                () -> new org.springframework.web.server.ResponseStatusException(
+                                        org.springframework.http.HttpStatus.NOT_FOUND,
                                         "Cliente presencial no encontrado"
                                 )
                         );
@@ -236,6 +238,34 @@ public class ClientePresencialService {
                 valor,
                 "El tipo de documento es obligatorio"
         ).toUpperCase();
+    }
+
+    private Long tiendaActual() {
+        Long tienda = com.tiendasebas.tiendasebas.config.TenantContext.getCurrentTenant();
+        if (tienda == null || tienda <= 0) {
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.UNAUTHORIZED);
+        }
+        return tienda;
+    }
+
+    @Transactional
+    public ClientePresencialResponse actualizar(Integer id, ClientePresencialRequest request) {
+        ClientePresencial cliente = buscarEntidadActiva(id);
+        String tipo = normalizarTipoDocumento(request.getTipoDocumento());
+        String numero = normalizarTextoObligatorio(request.getNumeroDocumento(), "Documento obligatorio");
+        clientePresencialRepository.findByTipoDocumentoIgnoreCaseAndNumeroDocumentoAndTiendaId(
+                tipo, numero, tiendaActual()).ifPresent(existente -> {
+                    if (!existente.getIdClientePresencial().equals(id)) {
+                        throw new CompraException("Ya existe un cliente presencial con ese documento");
+                    }
+                });
+        cliente.setNombre(normalizarTextoObligatorio(request.getNombre(), "Nombre obligatorio"));
+        cliente.setApellido(normalizarTextoOpcional(request.getApellido()));
+        cliente.setTipoDocumento(tipo);
+        cliente.setNumeroDocumento(numero);
+        cliente.setTelefono(normalizarTextoOpcional(request.getTelefono()));
+        cliente.setCorreo(normalizarCorreo(request.getCorreo()));
+        return convertirResponse(clientePresencialRepository.save(cliente));
     }
 
 

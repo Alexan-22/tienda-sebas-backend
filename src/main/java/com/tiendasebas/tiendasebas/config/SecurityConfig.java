@@ -1,6 +1,7 @@
 package com.tiendasebas.tiendasebas.config;
 
 import com.tiendasebas.tiendasebas.security.JwtAuthenticationFilter;
+import jakarta.servlet.DispatcherType;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -77,6 +78,10 @@ public class SecurityConfig {
                 )
 
                 .authorizeHttpRequests(auth -> auth
+                        // Preservar el estado original al renderizar errores del contenedor.
+                        // La solicitud HTTP inicial sigue pasando por todas las reglas.
+                        .requestMatchers(request -> request.getDispatcherType() == DispatcherType.ERROR
+                                && "/error".equals(request.getServletPath())).permitAll()
                         // Bloquear escritura legacy con tenantId proporcionado por cliente.
                         .requestMatchers(HttpMethod.POST, "/api/categorias").denyAll()
                         .requestMatchers(HttpMethod.PUT, "/api/categorias/*").denyAll()
@@ -118,6 +123,7 @@ public class SecurityConfig {
 
                         .requestMatchers(
                                 HttpMethod.GET,
+                                "/api/transferencias/publico",
                                 "/api/v1/tiendas/config",
                                 "/api/productos/public/**",
                                 "/api/producto-tallas/producto/**",
@@ -173,6 +179,12 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
 
+                .exceptionHandling(errors -> errors
+                        .authenticationEntryPoint((request, response, exception) ->
+                                response.sendError(401, "Autenticacion requerida"))
+                        .accessDeniedHandler((request, response, exception) ->
+                                response.sendError(403, "Acceso denegado")))
+
                 // JWT REGISTRADO SOLO DENTRO
                 // DE LA CADENA DE SPRING SECURITY
 
@@ -206,6 +218,7 @@ public class SecurityConfig {
                         "GET",
                         "POST",
                         "PUT",
+                        "PATCH",
                         "DELETE",
                         "OPTIONS"
                 )

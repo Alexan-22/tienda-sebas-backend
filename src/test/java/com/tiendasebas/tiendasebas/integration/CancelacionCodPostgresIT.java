@@ -81,7 +81,7 @@ class CancelacionCodPostgresIT {
     static class ContextoAislado {
         @Bean
         DataSource dataSource() {
-            return new DriverManagerDataSource(postgres.getJdbcUrl(),
+            return new DriverManagerDataSource(PostgresTestSafety.verifiedUrl(postgres),
                     postgres.getUsername(), postgres.getPassword());
         }
 
@@ -196,6 +196,9 @@ class CancelacionCodPostgresIT {
         db = context.getBean(JdbcTemplate.class);
         controller = context.getBean(CancelacionCodController.class);
         crearEsquemaDePruebas();
+        new org.springframework.jdbc.datasource.init.ResourceDatabasePopulator(
+                new org.springframework.core.io.ClassPathResource("db/migration/V2__kardex_cancelaciones_cod.sql"))
+                .execute(context.getBean(DataSource.class));
         assertEquals("fase3d_cod_aislada", db.queryForObject("SELECT current_database()", String.class));
     }
 
@@ -288,6 +291,7 @@ class CancelacionCodPostgresIT {
     void datosDePrueba() {
         SecurityContextHolder.clearContext();
         TenantContext.clear();
+        db.execute("DELETE FROM public.inventario_kardex");
         db.execute("DELETE FROM public.saas_cancelaciones_cod");
         db.execute("DELETE FROM public.saas_envios");
         db.execute("DELETE FROM public.saas_cobros_contraentrega");

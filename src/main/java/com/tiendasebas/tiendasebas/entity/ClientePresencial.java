@@ -14,8 +14,9 @@ import java.time.LocalDateTime;
         name = "clientes_presenciales",
         uniqueConstraints = {
                 @UniqueConstraint(
-                        name = "uk_cliente_presencial_documento",
+                        name = "uk_cliente_presencial_tienda_documento",
                         columnNames = {
+                                "tienda_id",
                                 "tipo_documento",
                                 "numero_documento"
                         }

@@ -11,6 +11,7 @@ import com.tiendasebas.tiendasebas.dto.VentaResponse;
 import com.tiendasebas.tiendasebas.service.VentaService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -29,6 +30,7 @@ public class VentaController {
     // CLIENTE - REALIZAR COMPRA ONLINE
     // =========================================================
     @PostMapping
+    @PreAuthorize("hasRole('CLIENTE')")
     public ResponseEntity<CompraResponse> comprar(@Valid @RequestBody CompraRequest request, Authentication authentication) {
         String correo = authentication.getName();
         return ResponseEntity.ok(ventaService.realizarCompra(request, correo));

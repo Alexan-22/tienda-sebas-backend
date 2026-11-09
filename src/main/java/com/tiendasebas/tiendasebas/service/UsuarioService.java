@@ -19,7 +19,7 @@ public class UsuarioService {
     // LISTAR TODOS LOS USUARIOS
     // =========================================================
     public List<UsuarioAdminResponse> listarTodos() {
-        return usuarioRepository.findAll().stream().map(this::convertirDto).toList();
+        return usuarioRepository.findByTiendaId(tiendaActual()).stream().map(this::convertirDto).toList();
     }
 
     // =========================================================
@@ -49,8 +49,17 @@ public class UsuarioService {
     // BUSCAR ENTIDAD
     // =========================================================
     private Usuario buscarEntidad(Integer idUsuario) {
-        return usuarioRepository.findById(idUsuario)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        return usuarioRepository.findByIdUsuarioAndTiendaId(idUsuario, tiendaActual())
+                .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(
+                        org.springframework.http.HttpStatus.NOT_FOUND, "Usuario no encontrado"));
+    }
+
+    private Long tiendaActual() {
+        Long tienda = com.tiendasebas.tiendasebas.config.TenantContext.getCurrentTenant();
+        if (tienda == null || tienda <= 0) {
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.UNAUTHORIZED);
+        }
+        return tienda;
     }
 
     // =========================================================

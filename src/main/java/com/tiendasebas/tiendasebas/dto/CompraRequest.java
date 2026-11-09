@@ -10,6 +10,9 @@ import java.util.List;
 @Data
 public class CompraRequest {
 
+    private String claveIdempotencia;
+    private Long cuentaBancariaId;
+
     @NotEmpty(message = "El carrito no puede estar vacío")
     private List<CompraItemDto> items;
 
